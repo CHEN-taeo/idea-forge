@@ -1,0 +1,14 @@
+﻿node_modules/
+dist/
+dist-electron/
+ideaforge.db
+ideaforge.db-shm
+ideaforge.db-wal
+*.log
+frontend-err.log
+frontend-out.log
+server-err.log
+server-out.log
+install-stderr.txt
+install-stdout.txt
+.env
