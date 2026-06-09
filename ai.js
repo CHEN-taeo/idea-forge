@@ -7,8 +7,13 @@ const API_KEY = process.env.AI_API_KEY || '';
 const API_URL = process.env.AI_API_URL || 'https://api.deepseek.com/v1';
 const MODEL = process.env.AI_MODEL || 'deepseek-chat';
 const TIMEOUT = 15000;
+const COACH_NAME = process.env.BRAND_COACH_NAME || process.env.VITE_BRAND_HOST_NAME || '陈老师';
 
 const isAvailable = () => !!API_KEY && API_KEY !== 'sk-your-key-here';
+
+function coachSystem(extra = '') {
+  return `你是「${COACH_NAME}」的思维教练。风格：直接、少废话、不替用户做决定。用简体中文。${extra}`;
+}
 
 // ---------------------------------------------------------------------------
 // Shared HTTP call
@@ -59,14 +64,14 @@ const TEMPLATE_PROMPTS = [
 
 async function generatePrompts(problem) {
   const ai = await callAI(
-    `你是一个创意头脑风暴引导师。根据用户提出的核心问题，生成3-5个深度思考角度，帮助打破思维惯性。每个角度一句话，用中文，带emoji前缀。`,
-    `核心问题：${problem}\n\n请生成3-5个思考角度：`
+    coachSystem('根据用户的核心问题，生成3个深度思考角度，帮助打破思维惯性。每个角度一句话，带emoji前缀。不要编号列表外的废话。'),
+    `核心问题：${problem}\n\n请生成3个思考角度：`
   );
   if (ai) {
-    const lines = ai.split('\n').filter(l => l.trim()).slice(0, 5);
-    return lines.length >= 3 ? lines : TEMPLATE_PROMPTS;
+    const lines = ai.split('\n').filter(l => l.trim()).slice(0, 3);
+    if (lines.length >= 3) return lines;
   }
-  return TEMPLATE_PROMPTS;
+  return TEMPLATE_PROMPTS.slice(0, 3);
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +125,42 @@ async function analyzeRound(ideas, roundNum) {
 }
 
 // ---------------------------------------------------------------------------
+// 4. SMART action for commitment / solo
+// ---------------------------------------------------------------------------
+const TEMPLATE_SMART_ACTIONS = [
+  '下周五前，与3位目标用户各聊30分钟，记录他们最大的痛点。',
+  '本周内写出一份一页纸方案，列出三个最大风险及对应缓解措施。',
+  '14天内完成最小验证：用现有资源试一次，写下结果与下一步。'
+];
+
+async function generateSmartAction(ideaText, problem, playerName) {
+  const ai = await callAI(
+    coachSystem('把用户的构想转化为一条具体、可执行、14天内能完成的行动。只输出行动本身，一句话，不要解释、不要引号。'),
+    `讨论问题：${problem}\n选定构想：${ideaText}${playerName ? `\n负责人：${playerName}` : ''}\n\n请给出一条SMART行动：`
+  );
+  if (ai) return ai.split('\n')[0].replace(/^[\d.)\-\s"]+/, '').replace(/["'"]$/, '').trim();
+  return TEMPLATE_SMART_ACTIONS[Math.floor(Math.random() * TEMPLATE_SMART_ACTIONS.length)];
+}
+
+// ---------------------------------------------------------------------------
+// 5. Solo — one challenging question per idea
+// ---------------------------------------------------------------------------
+const TEMPLATE_SOLO_CHALLENGE = [
+  '如果最坏的情况发生，你承受得起吗？具体是什么？',
+  '谁会是第一个反对这个方案的人？他们会怎么说？',
+  '如果只能保留这个想法的20%，你会留下哪一部分？'
+];
+
+async function soloChallengeIdea(ideaText, problem) {
+  const ai = await callAI(
+    coachSystem('对用户的一条想法只提一个尖锐、具体的追问。不要给答案。只输出一个问题。'),
+    `讨论问题：${problem}\n想法：${ideaText}\n\n请提一个追问：`
+  );
+  if (ai) return ai.split('\n').filter(l => l.trim())[0] || TEMPLATE_SOLO_CHALLENGE[0];
+  return TEMPLATE_SOLO_CHALLENGE[Math.floor(Math.random() * TEMPLATE_SOLO_CHALLENGE.length)];
+}
+
+// ---------------------------------------------------------------------------
 // Status check
 // ---------------------------------------------------------------------------
 function getStatus() {
@@ -130,4 +171,4 @@ function getStatus() {
   };
 }
 
-export { generatePrompts, expandIdea, analyzeRound, getStatus, isAvailable };
+export { generatePrompts, expandIdea, analyzeRound, generateSmartAction, soloChallengeIdea, getStatus, isAvailable };

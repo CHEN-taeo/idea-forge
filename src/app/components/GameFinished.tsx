@@ -4,7 +4,6 @@ import { ScrollArea } from './ui/scroll-area';
 import { ProgressStepper } from './ProgressStepper';
 import { PlayerAvatar } from './PlayerAvatar';
 import { IdeaCard } from './IdeaCard';
-import { CommitmentCeremony } from './CommitmentCeremony';
 import { cn } from './ui/utils';
 import confetti from 'canvas-confetti';
 
@@ -12,7 +11,6 @@ interface GameFinishedProps {
   gameState: GameState;
   currentPlayer: Player;
   onExportSession: () => string;
-  onCreateCommitment: (action: string, ideaId: string, onSuccess: (c: any) => void) => void;
   onAiRoundSummary?: (roundNum: number, callback: (result: any) => void) => void;
 }
 
@@ -20,7 +18,6 @@ export function GameFinished({
   gameState,
   currentPlayer,
   onExportSession,
-  onCreateCommitment,
   onAiRoundSummary
 }: GameFinishedProps) {
   const sortedPlayers = Object.values(gameState.players).sort((a, b) => b.score - a.score);
@@ -53,19 +50,21 @@ export function GameFinished({
   };
 
   const handlePlayAgain = () => {
-    if (confirm('Return to lobby? This will take everyone back to the lobby.')) {
+    if (confirm('返回大厅？这将把所有人带回等待界面。')) {
       window.location.reload();
     }
   };
 
   useEffect(() => {
-    confetti({
-      particleCount: 60,
-      spread: 50,
-      origin: { y: 0.5 },
-      colors: ['#5eb3e6', '#e59bb3', '#7cd992', '#f0c674', '#fbbf24', '#ffffff']
-    });
-  }, []);
+    if ((gameState.commitments?.length ?? 0) === 0) {
+      confetti({
+        particleCount: 40,
+        spread: 40,
+        origin: { y: 0.5 },
+        colors: ['#5eb3e6', '#e59bb3', '#7cd992', '#f0c674', '#fbbf24', '#ffffff']
+      });
+    }
+  }, [gameState.commitments?.length]);
 
   const handleExport = () => {
     const report = onExportSession();
@@ -73,7 +72,7 @@ export function GameFinished({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `idea-forge-session-${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `构想熔炉-会议报告-${new Date().toISOString().split('T')[0]}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -84,26 +83,41 @@ export function GameFinished({
     <div className="min-h-screen p-3 perspective-scene">
       <div className="max-w-xl mx-auto animate-scale-in page-card p-4">
 
-        <ProgressStepper currentPhase="finished" />
+        <ProgressStepper currentPhase="finished" template={gameState.template} />
 
-        {/* ════════════════════════════════════════════════════════
-            PRIMARY: Commitment Ceremony — the real output of the session
-            ════════════════════════════════════════════════════════ */}
-        <div className="mb-6 pt-2">
-          <CommitmentCeremony
-            ideas={gameState.ideas}
-            players={gameState.players}
-            currentPlayer={currentPlayer}
-            onCreateCommitment={onCreateCommitment}
-          />
-        </div>
+        {/* Session commitments — primary output recap */}
+        {(gameState.commitments?.length ?? 0) > 0 && (
+          <div className="mb-5 pt-2">
+            <div className="flex items-baseline justify-between mb-3 px-0.5">
+              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-emerald-300/55">
+                ✓ 团队承诺
+              </span>
+              <span className="text-[11px] text-white/25">
+                {gameState.commitments!.length} 项行动
+              </span>
+            </div>
+            <div className="space-y-2">
+              {gameState.commitments!.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-start gap-2.5 bg-emerald-400/[0.04] border border-emerald-400/10 rounded-xl p-3"
+                >
+                  <PlayerAvatar name={c.playerName} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-white/35 mb-0.5">{c.playerName}</p>
+                    <p className="text-xs text-white/70 leading-relaxed">{c.action}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Divider */}
-        <div className="border-t border-white/[0.04] mb-5" />
+        {(gameState.commitments?.length ?? 0) > 0 && (
+          <div className="border-t border-white/[0.04] mb-5" />
+        )}
 
-        {/* ════════════════════════════════════════════════════════
-            SECONDARY: Results recap — scoreboard, MVP, survivors
-            ════════════════════════════════════════════════════════ */}
+        {/* Results recap */}
         <div className="text-center mb-5">
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/20 mb-2 block">本次会议成果</span>
           <div className="flex items-center justify-center gap-2 mb-1">

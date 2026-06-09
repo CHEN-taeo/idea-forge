@@ -5,6 +5,7 @@ import { GameLobby } from './components/GameLobby';
 import { RoundOne } from './components/RoundOne';
 import { RoundTwo } from './components/RoundTwo';
 import { RoundThree } from './components/RoundThree';
+import { CommitmentPhase } from './components/CommitmentPhase';
 import { GameFinished } from './components/GameFinished';
 import { HotSeatApp } from './components/HotSeatApp';
 import { SoloMode } from './components/SoloMode';
@@ -65,11 +66,11 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-sm animate-scale-in page-card p-8 text-center">
           <p className="text-5xl mb-4">📱</p>
-          <h2 className="text-lg font-light text-white/70 mb-1">Join the session</h2>
-          <p className="text-xs text-white/25 mb-6">Room <span className="text-amber-200/60 tracking-[0.15em]">{qrRoomCode}</span></p>
+          <h2 className="text-lg font-light text-white/70 mb-1">加入围炉</h2>
+          <p className="text-xs text-white/25 mb-6">房间码 <span className="text-amber-200/60 tracking-[0.15em]">{qrRoomCode}</span></p>
           <input
             className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none mb-3 text-center"
-            placeholder="Your name"
+            placeholder="你的名字"
             value={qrName}
             onChange={e => setQrName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && qrName.trim()) { joinGame(qrName.trim(), qrRoomCode); setQrRoomCode(null); } }}
@@ -80,7 +81,7 @@ export default function App() {
             disabled={!qrName.trim()}
             className="w-full h-10 rounded-xl btn-primary text-sm disabled:btn-disabled"
           >
-            Join Room
+            加入房间
           </button>
         </div>
         <Toaster />
@@ -88,14 +89,14 @@ export default function App() {
     );
   }
 
-  const handleCreateGame = (playerName: string, problemStatement: string) => {
-    createGame(playerName, problemStatement);
-    toast('Room created — share the QR code');
+  const handleCreateGame = (playerName: string, problemStatement: string, template: 'full' | 'quick' = 'full') => {
+    createGame(playerName, problemStatement, template);
+    toast(template === 'quick' ? '快速围炉已创建 — 分享二维码' : '围炉已创建 — 分享二维码');
   };
 
   const handleJoinGame = (playerName: string, roomCode: string) => {
     joinGame(playerName, roomCode);
-    toast('Joined room');
+    toast('已加入围炉');
   };
 
   const isHost = gameState ? gameState.hostId === currentPlayer?.id : false;
@@ -106,7 +107,7 @@ export default function App() {
       <>
         <button onClick={() => setSolo(false)}
           className="fixed top-4 left-4 z-50 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/30 text-xs hover:text-white/50 transition-colors">
-          ← Back
+          ← 返回
         </button>
         <SoloMode />
       </>
@@ -119,7 +120,7 @@ export default function App() {
       <>
         <button onClick={() => setHotSeat(false)}
           className="fixed top-4 left-4 z-50 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/30 text-xs hover:text-white/50 transition-colors">
-          ← Back
+          ← 返回
         </button>
         <HotSeatApp />
       </>
@@ -141,7 +142,7 @@ export default function App() {
     );
   }
 
-  const handleStartGame = () => { startGame(); toast('Session started'); };
+  const handleStartGame = () => { startGame(); toast('讨论开始'); };
   const handleSubmitIdea = (text: string, card?: number) => { submitIdea(text, card); };
   const handleVoteIdea = (ideaId: string) => { voteForIdea(ideaId); };
   const handleGuessAuthor = (ideaId: string, authorId: string) => { guessAuthor(ideaId, authorId); };
@@ -160,7 +161,7 @@ export default function App() {
           onClick={() => setScreenMode(false)}
           className="fixed top-4 right-4 z-50 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/30 text-sm hover:text-white/50 transition-colors"
         >
-          ✕ Exit Screen Mode
+          ✕ 退出投屏模式
         </button>
         <ScreenView gameState={gameState} currentPlayer={currentPlayer} isHost={isHost} />
         <Toaster />
@@ -176,7 +177,7 @@ export default function App() {
           onClick={() => setScreenMode(true)}
           className="fixed top-3 right-3 z-50 px-3 py-1 rounded-full bg-amber-300/10 border border-amber-300/20 text-amber-200/50 text-[10px] hover:bg-amber-300/20 transition-colors"
         >
-          📺 Project Screen
+          📺 投屏模式
         </button>
       )}
 
@@ -224,12 +225,20 @@ export default function App() {
         />
       )}
 
+      {gameState.phase === 'commitment' && currentPlayer && (
+        <CommitmentPhase
+          gameState={gameState}
+          currentPlayer={currentPlayer}
+          onCreateCommitment={(action, ideaId, onSuccess) => createCommitment(action, ideaId, 14, onSuccess)}
+          onNextPhase={handleNextPhase}
+        />
+      )}
+
       {gameState.phase === 'finished' && currentPlayer && (
         <GameFinished
           gameState={gameState}
           currentPlayer={currentPlayer}
           onExportSession={exportSession}
-          onCreateCommitment={(action, ideaId, onSuccess) => createCommitment(action, ideaId, 14, onSuccess)}
           onAiRoundSummary={(roundNum, callback) => aiRoundSummary(roundNum, callback)}
         />
       )}

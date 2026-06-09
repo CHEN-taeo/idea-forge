@@ -6,11 +6,9 @@ interface CommitmentCeremonyProps {
   ideas: Idea[];
   players: Record<string, Player>;
   currentPlayer: Player;
+  serverCommitments?: Commitment[];
   onCreateCommitment: (action: string, ideaId: string, onSuccess: (commitment: Commitment) => void) => void;
-}
-
-function avatarText(name: string): string {
-  return name ? name.slice(0, 2).toUpperCase() : '?';
+  onAiSuggestAction?: (ideaText: string, onResult: (action: string, mode: string) => void, onError: (msg: string) => void) => void;
 }
 
 function getTopIdeas(ideas: Idea[], n = 5): Idea[] {
@@ -20,15 +18,19 @@ function getTopIdeas(ideas: Idea[], n = 5): Idea[] {
     .slice(0, n);
 }
 
-export function CommitmentCeremony({ ideas, players, currentPlayer, onCreateCommitment }: CommitmentCeremonyProps) {
+export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommitments = [], onCreateCommitment, onAiSuggestAction }: CommitmentCeremonyProps) {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [actionText, setActionText] = useState('');
-  const [myCommitted, setMyCommitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiModeHint, setAiModeHint] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const commitments = serverCommitments;
+  const myCommitted = commitments.some(
+    c => c.playerName.toLowerCase() === currentPlayer.name.toLowerCase()
+  );
 
   const topIdeas = getTopIdeas(ideas);
   const claimedIdeaIds = new Set(commitments.map(c => c.ideaId));
@@ -68,29 +70,32 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, onCreateComm
     onCreateCommitment(action, selectedIdeaId, (result) => {
       setSubmitting(false);
       if (result?.error) {
-        // Error already surfaced via toast in useGameSocket
         return;
       }
-      setMyCommitted(true);
-      setCommitments(prev => [...prev, result]);
       setSelectedIdeaId(null);
       setActionText('');
     });
   }, [actionText, selectedIdeaId, onCreateCommitment]);
 
-  const handleCopyLink = useCallback(async (url: string, idx: number) => {
-    try {
-      // Prefix with current origin for absolute URL
-      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-      await navigator.clipboard.writeText(fullUrl);
-      setCopiedIdx(idx);
-      setTimeout(() => setCopiedIdx(null), 2000);
-    } catch {
-      // Clipboard API not available
-    }
-  }, []);
-
   const selectedIdea = selectedIdeaId ? ideas.find(i => i.id === selectedIdeaId) : null;
+
+  const handleAiSuggest = useCallback(() => {
+    if (!selectedIdea || !onAiSuggestAction || aiLoading) return;
+    setAiLoading(true);
+    setAiModeHint(null);
+    onAiSuggestAction(
+      selectedIdea.text,
+      (action, mode) => {
+        setAiLoading(false);
+        setActionText(action);
+        setAiModeHint(mode === 'ai' ? 'AI 建议（可修改）' : '离线提示（可修改）');
+        textareaRef.current?.focus();
+      },
+      () => {
+        setAiLoading(false);
+      }
+    );
+  }, [selectedIdea, onAiSuggestAction, aiLoading]);
 
   return (
     <div
@@ -170,8 +175,23 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, onCreateComm
               placeholder={`具体、可执行的一件事……\n例如：下周五前联系3位潜在用户做访谈`}
               maxLength={200}
               rows={3}
-              className="w-full bg-white/[0.03] border border-amber-300/14 rounded-lg text-white/85 text-[13px] leading-relaxed p-2.5 resize-none min-h-[64px] outline-none transition-colors duration-200 placeholder:text-white/20 focus:border-amber-300/30 focus:shadow-[0_0_0_2px_rgba(251,191,36,.06)] mb-2.5 font-[inherit]"
+              className="w-full bg-white/[0.03] border border-amber-300/14 rounded-lg text-white/85 text-[13px] leading-relaxed p-2.5 resize-none min-h-[64px] outline-none transition-colors duration-200 placeholder:text-white/20 focus:border-amber-300/30 focus:shadow-[0_0_0_2px_rgba(251,191,36,.06)] mb-2 font-[inherit]"
             />
+            {onAiSuggestAction && (
+              <div className="flex items-center gap-2 mb-2.5">
+                <button
+                  type="button"
+                  onClick={handleAiSuggest}
+                  disabled={aiLoading}
+                  className="text-[11px] text-amber-300/55 hover:text-amber-300/85 transition-colors disabled:opacity-30"
+                >
+                  {aiLoading ? '⏳ AI 思考中…' : '🤖 AI 帮我写行动'}
+                </button>
+                {aiModeHint && (
+                  <span className="text-[10px] text-white/20">{aiModeHint}</span>
+                )}
+              </div>
+            )}
             <div className="flex items-center justify-between gap-2.5">
               <span className="text-[11px] text-white/25 whitespace-nowrap">
                 📅 <span className="text-amber-300/50 font-medium">14天</span>后系统会来提醒你
@@ -200,42 +220,14 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, onCreateComm
         )}
       </div>
 
-      {/* Commitments list */}
-      <div className="flex flex-col gap-2">
-        {commitments.length === 0 ? (
+      {/* Commitments list — hidden when parent shows team summary */}
+      {commitments.length === 0 && (
+        <div className="flex flex-col gap-2">
           <div className="text-center py-5 text-xs text-white/20">
             还没有人认领，先在 👆 的构想中选择一个
           </div>
-        ) : (
-          commitments.map((c, idx) => (
-            <div
-              key={c.id}
-              className="flex items-start gap-2.5 bg-white/[0.02] border border-white/[0.06] rounded-xl p-3 animate-[commitSlideIn_0.35s_cubic-bezier(.25,.1,.25,1)]"
-            >
-              <div className="w-[26px] h-[26px] rounded-full bg-amber-300/15 border border-amber-300/20 flex-shrink-0 flex items-center justify-center text-[10px] text-amber-200/80 font-medium">
-                {avatarText(c.playerName)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-white/35 mb-0.5">{c.playerName} 认领</p>
-                <p className="text-xs text-white/70 leading-relaxed">{c.action}</p>
-              </div>
-              {c.echoUrl && (
-                <button
-                  onClick={() => handleCopyLink(c.echoUrl!, idx)}
-                  className={cn(
-                    'flex-shrink-0 bg-transparent border border-white/[0.08] rounded-md text-[10px] font-[inherit] px-2 py-1 cursor-pointer transition-all duration-150 whitespace-nowrap',
-                    copiedIdx === idx
-                      ? 'text-emerald-400/70 border-emerald-400/20'
-                      : 'text-white/25 hover:border-amber-300/25 hover:text-amber-200/70 hover:bg-amber-300/6'
-                  )}
-                >
-                  {copiedIdx === idx ? '✓ 已复制' : '复制链接'}
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Keyframe styles */}
       <style>{`

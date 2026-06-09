@@ -49,7 +49,7 @@ export function RoundTwo({
     <div className="min-h-screen p-3 perspective-scene">
       <div className="max-w-3xl mx-auto animate-scale-in page-card p-4">
 
-        <ProgressStepper currentPhase="r2_adapt" />
+        <ProgressStepper currentPhase="r2_adapt" template={gameState.template} />
 
         <div className="text-center mb-2">
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/20">第二轮 · 改造</span>
@@ -115,7 +115,7 @@ export function RoundTwo({
                 onClick={onNextPhase}
                 className="w-full h-7 rounded-lg btn-primary text-[11px] font-normal flex items-center justify-center gap-1"
               >
-                下一轮
+                {gameState.template === 'quick' ? '进入承诺仪式' : '下一轮'}
                 <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18l6-6-6-6" />
                 </svg>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { brand } from '../lib/brand';
 
 interface LandingPageProps {
   connectionStatus: string;
-  onCreateGame: (name: string, problem: string) => void;
+  onCreateGame: (name: string, problem: string, template: 'full' | 'quick') => void;
   onJoinGame: (name: string, roomCode: string) => void;
   onHotSeat: () => void;
   onSolo: () => void;
@@ -10,126 +11,130 @@ interface LandingPageProps {
 
 export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotSeat, onSolo }: LandingPageProps) {
   const [mode, setMode] = useState<'create' | 'join' | null>(null);
+  const [showMore, setShowMore] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [problemStatement, setProblemStatement] = useState('');
-  const [template, setTemplate] = useState<'full' | 'quick'>('full');
+  const [template, setTemplate] = useState<'full' | 'quick'>('quick');
 
   const connected = connectionStatus === 'connected';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm animate-scale-in page-card p-8">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-amber-300/[0.06] border border-amber-300/[0.08] mb-4">
-            <span className="text-xl">⚒️</span>
+            <span className="text-xl">☯</span>
           </div>
-          <h1 className="text-xl font-light text-white/80 tracking-tight">Idea Forge</h1>
-          <p className="text-xs text-white/25 mt-1">
-            Every discussion ends with a decision someone owns.
-          </p>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <span className="inline-block size-1.5 rounded-full" style={{background: '#5eb3e6', boxShadow: '0 0 6px rgba(94,179,230,0.4)'}} />
-            <span className="inline-block size-1.5 rounded-full" style={{background: '#e59bb3', boxShadow: '0 0 6px rgba(229,155,179,0.4)'}} />
-            <span className="inline-block size-1.5 rounded-full" style={{background: '#7cd992', boxShadow: '0 0 6px rgba(124,217,146,0.4)'}} />
-            <span className="inline-block size-1.5 rounded-full" style={{background: '#f0c674', boxShadow: '0 0 6px rgba(240,198,116,0.4)'}} />
-          </div>
+          <h1 className="text-xl font-light text-white/80 tracking-tight">{brand.productName}</h1>
+          <p className="text-xs text-amber-200/40 mt-1">{brand.hostName} · {brand.subtitle}</p>
+          <p className="text-[11px] text-white/30 mt-2 leading-relaxed px-1">{brand.slogan}</p>
         </div>
 
         {mode === null && (
           <div className="space-y-2.5 stagger-children">
-            {/* PRIMARY: Create Room — host casts screen, players join on phones */}
             <button
               onClick={() => setMode('create')}
               disabled={!connected}
               className="w-full h-12 rounded-xl btn-primary text-sm font-normal flex items-center justify-center gap-2 disabled:btn-disabled"
             >
-              <span className="text-base">📺</span>
-              Create a Room
-              <span className="text-[10px] text-amber-200/40 ml-1">— you cast, they join</span>
+              <span className="text-base">🔥</span>
+              发起{brand.roomName}
+              <span className="text-[10px] text-amber-200/40 ml-1">— 你投屏，大家用手机</span>
             </button>
 
-            <p className="text-[10px] text-white/15 text-center px-2">
-              One screen in the room. Everyone else on their phone.
-              Silent ideation → shared reveal → structured debate.
+            <p className="text-[10px] text-white/15 text-center px-2 leading-relaxed">
+              一屏在会议室。其他人用手机。
+              静默写想法 → 一起揭晓 → 结构化讨论 → 每人认领一件事。
             </p>
 
-            {/* SECONDARY: Join an existing room */}
+            <button
+              onClick={onSolo}
+              className="w-full h-12 rounded-xl glass-light text-sm font-normal text-white/50 hover:text-white/75 transition-colors flex items-center justify-center gap-2 border border-white/[0.06]"
+            >
+              <span className="text-base">🧠</span>
+              开始{brand.soloName}
+              <span className="text-[10px] text-white/20">— 一个人，15 分钟想明白</span>
+            </button>
+
             <button
               onClick={() => setMode('join')}
               disabled={!connected}
-              className="w-full h-10 rounded-xl glass-light text-sm font-normal text-white/35 hover:text-white/60 transition-colors disabled:opacity-20"
+              className="w-full h-10 rounded-xl text-sm font-normal text-white/30 hover:text-white/50 transition-colors disabled:opacity-20"
             >
-              Join a Room — scan QR or enter code
+              加入{brand.roomName} — 扫码或输入房间码
             </button>
 
-            <div className="flex items-center gap-3 py-1">
-              <div className="flex-1 border-t border-white/[0.03]" />
-              <span className="text-[9px] text-white/10">or</span>
-              <div className="flex-1 border-t border-white/[0.03]" />
-            </div>
-
-            {/* SECONDARY: Solo — no server, one person */}
             <button
-              onClick={onSolo}
-              className="w-full h-10 rounded-xl glass-light text-sm font-normal text-white/35 hover:text-white/55 transition-colors"
+              onClick={() => setShowMore(!showMore)}
+              className="w-full text-[10px] text-white/15 hover:text-white/30 py-1"
             >
-              🧠 Solo Brainstorm — think alone, structured
+              {showMore ? '收起更多' : '更多模式…'}
             </button>
 
-            {/* TERTIARY: Hot Seat — no server, no phones */}
-            <button
-              onClick={onHotSeat}
-              className="w-full h-9 rounded-xl text-xs font-normal text-white/15 hover:text-white/30 transition-colors"
-            >
-              🔥 Hot Seat — no server, one screen, everyone talks
-            </button>
+            {showMore && (
+              <button
+                onClick={onHotSeat}
+                className="w-full h-9 rounded-xl text-xs font-normal text-white/15 hover:text-white/30 transition-colors"
+              >
+                🎤 热座模式 — 无服务器，一屏口述讨论
+              </button>
+            )}
+
+            {!connected && (
+              <p className="text-[10px] text-red-300/40 text-center">正在连接服务器…</p>
+            )}
           </div>
         )}
 
         {mode === 'create' && (
           <div className="space-y-3 animate-fade-in-up">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">Host a session</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">主持一场{brand.roomName}</p>
             <input
               className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none"
-              placeholder="Your name"
+              placeholder="你的名字"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
             />
             <textarea
               className="w-full h-20 px-3 py-2 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none resize-none"
-              placeholder="What are we discussing? e.g. How should we prioritize Q3?"
+              placeholder="今天要讨论什么？例如：Q3 优先级怎么排？"
               value={problemStatement}
               onChange={(e) => setProblemStatement(e.target.value)}
             />
             <div className="flex gap-2">
-              <button onClick={() => setTemplate('quick')}
+              <button
+                onClick={() => setTemplate('quick')}
                 className={template === 'quick'
                   ? 'flex-1 h-9 rounded-lg bg-amber-300/10 border border-amber-300/25 text-amber-200/70 text-xs'
-                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}>
-                ⚡ Quick · 30 min<br />
-                <span className="text-[9px] text-white/15">Brainstorm + Vote + Decide</span>
+                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}
+              >
+                ⚡ 快速 · 约 30 分钟<br />
+                <span className="text-[9px] text-white/15">构思 → 投票 → 认领</span>
               </button>
-              <button onClick={() => setTemplate('full')}
+              <button
+                onClick={() => setTemplate('full')}
                 className={template === 'full'
                   ? 'flex-1 h-9 rounded-lg bg-amber-300/10 border border-amber-300/25 text-amber-200/70 text-xs'
-                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}>
-                🎯 Full · 60 min<br />
-                <span className="text-[9px] text-white/15">Brainstorm + Remix + Challenge + Decide</span>
+                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}
+              >
+                🎯 完整 · 约 60 分钟<br />
+                <span className="text-[9px] text-white/15">构思 → 改造 → 挑战 → 认领</span>
               </button>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setMode(null)}
-                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors">
-                Back
+              <button
+                onClick={() => setMode(null)}
+                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors"
+              >
+                返回
               </button>
               <button
-                onClick={() => onCreateGame(playerName, problemStatement)}
+                onClick={() => onCreateGame(playerName, problemStatement, template)}
                 disabled={!playerName.trim() || !problemStatement.trim()}
                 className="flex-1 h-10 rounded-lg btn-primary text-sm disabled:btn-disabled"
               >
-                Create Room
+                创建房间
               </button>
             </div>
           </div>
@@ -137,31 +142,33 @@ export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotS
 
         {mode === 'join' && (
           <div className="space-y-3 animate-fade-in-up">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">Join a session</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">加入{brand.roomName}</p>
             <input
               className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none"
-              placeholder="Your name"
+              placeholder="你的名字"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
             />
             <input
               className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none uppercase tracking-[0.2em] text-center"
-              placeholder="ROOM CODE"
+              placeholder="房间码"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
               maxLength={6}
             />
             <div className="flex gap-2">
-              <button onClick={() => setMode(null)}
-                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors">
-                Back
+              <button
+                onClick={() => setMode(null)}
+                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors"
+              >
+                返回
               </button>
               <button
                 onClick={() => onJoinGame(playerName, roomCode)}
                 disabled={!playerName.trim() || !roomCode.trim()}
                 className="flex-1 h-10 rounded-lg btn-primary text-sm disabled:btn-disabled"
               >
-                Join
+                加入
               </button>
             </div>
           </div>

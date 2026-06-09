@@ -1,4 +1,13 @@
-export type GamePhase = 'lobby' | 'r1_submit' | 'r1_guess' | 'r2_adapt' | 'r3_challenge' | 'finished';
+export type GamePhase =
+  | 'lobby'
+  | 'r1_submit'
+  | 'r1_guess'
+  | 'r2_adapt'
+  | 'r3_challenge'
+  | 'commitment'
+  | 'finished';
+
+export type SessionTemplate = 'full' | 'quick';
 
 export type Role = 
   | 'Visionary' 
@@ -65,9 +74,11 @@ export interface GameState {
   players: Record<string, Player>;
   ideas: Idea[];
   challenges: Challenge[];
+  commitments?: Commitment[];
   currentPlayerId: string | null;
   roomCode: string;
   hostId: string;
   problemStatement: string;
   timerEnd: number | null;
+  template?: SessionTemplate;
 }

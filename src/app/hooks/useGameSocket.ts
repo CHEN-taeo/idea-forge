@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GameState, Player } from '../types/game';
+import { brand, reportFooter } from '../lib/brand';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -11,7 +12,7 @@ interface UseGameSocketReturn {
   connectionStatus: ConnectionStatus;
   playerId: string | null;
   joinGame: (playerName: string, roomCode: string) => void;
-  createGame: (playerName: string, problemStatement: string) => void;
+  createGame: (playerName: string, problemStatement: string, template?: 'full' | 'quick') => void;
   updatePlayerReady: (ready: boolean) => void;
   startGame: () => void;
   submitIdea: (text: string, inspirationCard?: number) => void;
@@ -33,6 +34,33 @@ interface UseGameSocketReturn {
 }
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const SESSION_KEY = 'idea-forge-session';
+
+function saveSessionMeta(roomCode: string, playerId: string, playerName: string) {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId, playerName }));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function loadSessionMeta(): { roomCode: string; playerId: string; playerName: string } | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function clearSessionMeta() {
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 export function useGameSocket(): UseGameSocketReturn {
   const socketRef = useRef<Socket | null>(null);
@@ -65,14 +93,35 @@ export function useGameSocket(): UseGameSocketReturn {
       console.log(`[Socket] Connected: ${socket.id}`);
       setConnectionStatus('connected');
       setLastError(null);
+
+      const saved = loadSessionMeta();
+      if (saved?.roomCode && saved?.playerName) {
+        socket.emit('rejoin_room', saved, (response: any) => {
+          if (response?.error) {
+            console.warn('[rejoin_room]', response.error);
+            clearSessionMeta();
+          }
+        });
+      }
     });
 
     socket.on('game_state', (state: GameState) => {
       setGameState(state);
       if (state.currentPlayerId && state.players[state.currentPlayerId]) {
-        setCurrentPlayer(state.players[state.currentPlayerId]);
+        const player = state.players[state.currentPlayerId];
+        setCurrentPlayer(player);
         setPlayerId(state.currentPlayerId);
+        saveSessionMeta(state.roomCode, state.currentPlayerId, player.name);
       }
+    });
+
+    socket.on('new_commitment', (commitment: import('../types/game').Commitment) => {
+      setGameState(prev => {
+        if (!prev) return prev;
+        const existing = prev.commitments || [];
+        if (existing.some(c => c.id === commitment.id)) return prev;
+        return { ...prev, commitments: [...existing, commitment] };
+      });
     });
 
     socket.on('error', ({ message }: { message: string }) => {
@@ -88,18 +137,27 @@ export function useGameSocket(): UseGameSocketReturn {
     socket.on('connect_error', (err: Error) => {
       console.error('[Socket] Connection error:', err.message);
       setConnectionStatus('error');
-      setLastError(`Cannot connect to server: ${err.message}`);
+      setLastError(`无法连接服务器：${err.message}`);
     });
 
     socket.on('reconnect', (attemptNumber: number) => {
       console.log(`[Socket] Reconnected after ${attemptNumber} attempts`);
       setConnectionStatus('connected');
       setLastError(null);
+
+      const saved = loadSessionMeta();
+      if (saved?.roomCode && saved?.playerName) {
+        socket.emit('rejoin_room', saved, (response: any) => {
+          if (response?.error) {
+            setLastError(response.error);
+          }
+        });
+      }
     });
 
     socket.on('reconnect_error', () => {
       setConnectionStatus('error');
-      setLastError('Reconnection failed. Please check the server.');
+      setLastError('重新连接失败，请检查服务器是否运行');
     });
 
     return () => {
@@ -115,17 +173,19 @@ export function useGameSocket(): UseGameSocketReturn {
   // -----------------------------------------------------------------------
   // CREATE GAME
   // -----------------------------------------------------------------------
-  const createGame = useCallback((playerName: string, problemStatement: string) => {
+  const createGame = useCallback((playerName: string, problemStatement: string, template: 'full' | 'quick' = 'full') => {
     const socket = socketRef.current;
     if (!socket?.connected) {
-      setLastError('Not connected to server');
+      setLastError('未连接到服务器');
       return;
     }
 
-    socket.emit('create_room', { playerName, problemStatement }, (response: any) => {
+    socket.emit('create_room', { playerName, problemStatement, template }, (response: any) => {
       if (response?.error) {
         setLastError(response.error);
         console.error('[createGame]', response.error);
+      } else if (response?.roomCode && response?.playerId) {
+        saveSessionMeta(response.roomCode, response.playerId, playerName.trim());
       }
     });
   }, []);
@@ -136,7 +196,7 @@ export function useGameSocket(): UseGameSocketReturn {
   const joinGame = useCallback((playerName: string, roomCode: string) => {
     const socket = socketRef.current;
     if (!socket?.connected) {
-      setLastError('Not connected to server');
+      setLastError('未连接到服务器');
       return;
     }
 
@@ -144,6 +204,8 @@ export function useGameSocket(): UseGameSocketReturn {
       if (response?.error) {
         setLastError(response.error);
         console.error('[joinGame]', response.error);
+      } else if (response?.playerId) {
+        saveSessionMeta(roomCode.toUpperCase().trim(), response.playerId, playerName.trim());
       }
     });
   }, []);
@@ -253,7 +315,7 @@ export function useGameSocket(): UseGameSocketReturn {
   const createCommitment = useCallback((action: string, ideaId: string, dueDays: number | undefined, onSuccess: (result: any) => void) => {
     const socket = socketRef.current;
     if (!socket?.connected) {
-      setLastError('Not connected to server');
+      setLastError('未连接到服务器');
       return;
     }
     socket.emit('create_commitment', { action, ideaId, dueDays: dueDays || 14 }, (response: any) => {
@@ -270,7 +332,7 @@ export function useGameSocket(): UseGameSocketReturn {
           dueDate: response.dueDate
         });
       } else {
-        onSuccess({ error: 'No response from server' });
+        onSuccess({ error: '服务器无响应' });
       }
     });
   }, [currentPlayer]);
@@ -288,7 +350,7 @@ export function useGameSocket(): UseGameSocketReturn {
 
   const aiGeneratePrompts = useCallback((problem: string, callback: (result: any) => void) => {
     const socket = socketRef.current;
-    if (!socket?.connected) { callback({ error: 'Not connected' }); return; }
+    if (!socket?.connected) { callback({ error: '未连接' }); return; }
     socket.emit('ai_generate_prompts', { problem }, (res: any) => {
       callback(res);
     });
@@ -296,7 +358,7 @@ export function useGameSocket(): UseGameSocketReturn {
 
   const aiExpand = useCallback((ideaText: string, callback: (result: any) => void) => {
     const socket = socketRef.current;
-    if (!socket?.connected) { callback({ error: 'Not connected' }); return; }
+    if (!socket?.connected) { callback({ error: '未连接' }); return; }
     socket.emit('ai_expand', { ideaText }, (res: any) => {
       callback(res);
     });
@@ -304,7 +366,7 @@ export function useGameSocket(): UseGameSocketReturn {
 
   const aiRoundSummary = useCallback((roundNum: number, callback: (result: any) => void) => {
     const socket = socketRef.current;
-    if (!socket?.connected) { callback({ error: 'Not connected' }); return; }
+    if (!socket?.connected) { callback({ error: '未连接' }); return; }
     socket.emit('ai_round_summary', { roundNum }, (res: any) => {
       callback(res);
     });
@@ -322,82 +384,60 @@ export function useGameSocket(): UseGameSocketReturn {
     const mvpIdea = [...survivingIdeas].sort((a, b) => b.votes - a.votes)[0];
     const r1 = gameState.ideas.filter(i => i.round === 1);
     const r2 = gameState.ideas.filter(i => i.round === 2);
-    const challenged = gameState.ideas.filter(i => i.challengedBy);
-    const defended = challenged.filter(i => i.defenseResponse && !i.defenseAccepted);
-    const accepted = challenged.filter(i => i.defenseAccepted);
 
     const date = new Date().toISOString().split('T')[0];
 
-    return `# Idea Forge — Session Report
-> ${date} · ${players.length} participants · ${gameState.ideas.length} ideas · ${gameState.challenges.length} challenges
+    const commitments = gameState.commitments || [];
+
+    return `# ${brand.productName} — 会议报告
+> ${date} · ${players.length} 人 · ${gameState.ideas.length} 条想法 · ${gameState.challenges.length} 次质询
 
 ---
 
-## Problem
+## 讨论问题
 **${gameState.problemStatement}**
 
 ---
 
-## Round 1 — Brainstorm (${r1.length} ideas)
+## 团队承诺
+${commitments.length > 0 ? commitments.map(c => `- **${c.playerName}**：${c.action}`).join('\n') : '_（本场暂无认领记录）_'}
+
+---
+
+## 第一轮 · 构思（${r1.length} 条）
 ${r1.sort((a, b) => b.votes - a.votes).map((idea, i) => {
   const author = gameState.players[idea.authorId];
   return `### ${i + 1}. ${idea.text}
-- **Author:** ${author?.name || 'Unknown'} · **Votes:** ${idea.votes} · **Role:** ${author?.role || '—'}
-${idea.inspirationCard !== undefined ? `- Inspiration: ${idea.inspirationCard}` : ''}`;
-}).join('\n\n')}
+- **作者：** ${author?.name || '未知'} · **票数：** ${idea.votes} · **角色：** ${author?.role || '—'}`;
+}).join('\n\n') || '_无_'}
 
 ---
 
-## Round 2 — Remixes (${r2.length} adaptations)
+## 第二轮 · 改造（${r2.length} 条）
 ${r2.length > 0 ? r2.map(idea => {
   const author = gameState.players[idea.authorId];
-  const original = gameState.ideas.find(i => i.id === idea.adaptedFrom);
   return `### ${idea.text}
-- **Author:** ${author?.name || 'Unknown'} · **Votes:** ${idea.votes}
-- Adapted from: ${original?.text?.substring(0, 80) ?? '—'}…
-${idea.endorsed ? '- ✅ Endorsed by original author' : ''}`;
-}).join('\n\n') : 'No remixes were created in this session.'}
+- **作者：** ${author?.name || '未知'}${idea.endorsed ? ' · ✅ 已获原作者认可' : ''}`;
+}).join('\n\n') : '本场无改造记录。'}
 
 ---
 
-## Round 3 — Challenges & Risk Register
+## 第三轮 · 风险登记
 ${gameState.challenges.length > 0 ? gameState.challenges.map(c => {
   const idea = gameState.ideas.find(i => i.id === c.ideaId);
-  const status = idea?.defenseAccepted ? 'ACCEPTED (improved)' : idea?.defenseResponse ? 'REFUTED (defense passed)' : 'UNRESOLVED';
-  return `### ⚠️ ${idea?.text?.substring(0, 60) ?? 'Unknown idea'}…
-- **Challenger:** ${c.challengerName}
-- **Risk identified:** ${c.reason}
-- **Status:** ${status}
-${idea?.defenseResponse ? `- **Response:** ${idea.defenseResponse}` : ''}`;
-}).join('\n\n') : 'No challenges were raised in this session.'}
-
-**Risk Summary:**
-- Confirmed risks (accepted): ${accepted.length}
-- Mitigated risks (defended): ${defended.length}
-- Unresolved: ${challenged.length - accepted.length - defended.length}
+  const status = idea?.defenseAccepted ? '已接受并改进' : idea?.defenseResponse ? '辩护通过' : '未决';
+  return `### ⚠️ ${idea?.text?.substring(0, 60) ?? '未知'}…
+- **质询者：** ${c.challengerName}
+- **风险：** ${c.reason}
+- **状态：** ${status}`;
+}).join('\n\n') : '本场无质询记录。'}
 
 ---
 
-## Final Standings
-${sorted.map((p, i) => `### ${i + 1}. ${p.name} — ${p.score} pts
-- **Role:** ${p.role || '—'}`).join('\n')}
+## 积分排行（参考）
+${sorted.map((p, i) => `${i + 1}. ${p.name} — ${p.score} 分`).join('\n')}
 
-${mvpIdea ? `### 🏆 Top Idea
-**${mvpIdea.text}**
-- Author: ${gameState.players[mvpIdea.authorId]?.name || 'Unknown'} · ${mvpIdea.votes} votes` : ''}
-
----
-
-## Next Steps
-> Each participant should pick ONE action item from the discussion above.
-
-| Owner | Action | Deadline |
-|-------|--------|----------|
-${sorted.map(p => `| ${p.name} | _[fill in]_ | _[date]_ |`).join('\n')}
-
----
-
-*Generated by Idea Forge · Every discussion ends with a decision someone owns.*`;
+${mvpIdea ? `\n### 最高票构想\n**${mvpIdea.text}**\n` : ''}${reportFooter(date)}`;
   }, [gameState]);
 
   return {

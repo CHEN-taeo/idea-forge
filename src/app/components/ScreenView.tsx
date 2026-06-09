@@ -4,6 +4,8 @@
 // Designed to be readable from across the room.
 // ---------------------------------------------------------------------------
 import { GameState, Player } from '../types/game';
+import { ROLE_LABELS } from '../data/game-data';
+import { brand } from '../lib/brand';
 import { PhaseTimer } from './PhaseTimer';
 import { cn } from './ui/utils';
 
@@ -23,12 +25,13 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
   const phase = gameState.phase;
 
   const phaseConfig: Record<string, { emoji: string; label: string; hint: string }> = {
-    'lobby':        { emoji: '👋', label: 'Waiting',        hint: `Room ${gameState.roomCode} · Share the QR code to invite` },
-    'r1_submit':    { emoji: '💡', label: 'Brainstorm',     hint: 'Everyone: submit your ideas silently on your phone' },
-    'r1_guess':     { emoji: '🔍', label: 'Vote & Guess',   hint: 'Vote for the best. Guess who wrote what.' },
-    'r2_adapt':     { emoji: '⚗️', label: 'Remix',          hint: 'Take the best ideas and make them sharper' },
-    'r3_challenge': { emoji: '⚔️', label: 'Challenge',      hint: 'Stress-test every idea. Defend or improve.' },
-    'finished':     { emoji: '🏆', label: 'Results',        hint: 'What got decided today?' },
+    'lobby':        { emoji: '👋', label: '等待中',        hint: `房间 ${gameState.roomCode} · 扫码或输入房间码加入` },
+    'r1_submit':    { emoji: '💡', label: '构思',     hint: '大家在手机上静默提交构想' },
+    'r1_guess':     { emoji: '🔍', label: '投票与竞猜',   hint: '为最佳构想投票，猜猜作者是谁' },
+    'r2_adapt':     { emoji: '⚗️', label: '改造',          hint: '把最好的想法改得更精炼' },
+    'r3_challenge': { emoji: '⚔️', label: '质询',      hint: '压力测试每条构想，答辩或改进' },
+    'commitment':   { emoji: '☯',  label: '承诺',    hint: '每人认领一项具体行动' },
+    'finished':     { emoji: '🏆', label: '成果',        hint: '今天做出了什么决定？' },
   };
 
   const config = phaseConfig[phase] || phaseConfig['lobby'];
@@ -47,7 +50,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
         </div>
         <div className="flex items-center gap-6">
           {/* Timer — large */}
-          {phase !== 'lobby' && phase !== 'finished' && (
+          {phase !== 'lobby' && phase !== 'finished' && phase !== 'commitment' && (
             <PhaseTimer
               duration={phase === 'r1_submit' ? 300 : phase === 'r2_adapt' ? 480 : 600}
               className="scale-150"
@@ -56,7 +59,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
           {/* Player count */}
           <div className="text-center">
             <p className="text-4xl font-light text-white/50 tabular-nums">{players.length}</p>
-            <p className="text-sm text-white/20">players</p>
+            <p className="text-sm text-white/20">人</p>
           </div>
         </div>
       </div>
@@ -69,11 +72,11 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-6xl mb-6">📺</p>
-                <p className="text-3xl font-light text-white/50 mb-4">Waiting for players...</p>
+                <p className="text-3xl font-light text-white/50 mb-4">等待参与者加入…</p>
                 <div className="inline-block bg-white rounded-2xl p-4 shadow-xl">
                   <p className="text-4xl font-light tracking-[0.3em] text-gray-900">{gameState.roomCode}</p>
                 </div>
-                <p className="text-lg text-white/20 mt-4">Scan the QR code or enter this code on your phone</p>
+                <p className="text-lg text-white/20 mt-4">扫码或输入房间码加入</p>
               </div>
             </div>
           )}
@@ -84,7 +87,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
               {r1Ideas.length > 0 && (
                 <div className="mb-6">
                   <p className="text-sm uppercase tracking-[0.15em] text-white/15 mb-3">
-                    Round 1 · {r1Ideas.length} ideas
+                    第一轮 · {r1Ideas.length} 条构想
                   </p>
                   <div className="grid gap-3">
                     {r1Ideas.sort((a, b) => b.votes - a.votes).map((idea, i) => {
@@ -103,7 +106,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
                             <span className={cn('text-2xl font-light tabular-nums', i === 0 ? 'text-amber-200/70' : 'text-white/25')}>
                               {idea.votes}
                             </span>
-                            <span className="text-[10px] text-white/10">votes</span>
+                            <span className="text-[10px] text-white/10">票</span>
                           </div>
                           {/* Content */}
                           <div className="flex-1 min-w-0">
@@ -116,9 +119,9 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
                               <span className="text-sm text-white/25">
                                 {phase === 'r1_guess' ? '???' : author?.name}
                               </span>
-                              {idea.round === 2 && <span className="text-xs px-1.5 py-0.5 rounded bg-white/[0.03] text-white/15">remix</span>}
-                              {isChallenged && <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/8 text-red-300/40">challenged</span>}
-                              {idea.endorsed && <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/8 text-emerald-300/40">endorsed</span>}
+                              {idea.round === 2 && <span className="text-xs px-1.5 py-0.5 rounded bg-white/[0.03] text-white/15">改造</span>}
+                              {isChallenged && <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/8 text-red-300/40">被质询</span>}
+                              {idea.endorsed && <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/8 text-emerald-300/40">已认可</span>}
                             </div>
                           </div>
                         </div>
@@ -132,7 +135,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
               {allIdeas.filter(i => i.round === 2).length > 0 && (
                 <div className="mt-6">
                   <p className="text-sm uppercase tracking-[0.15em] text-white/15 mb-3">
-                    Remixes · {allIdeas.filter(i => i.round === 2).length}
+                    改造 · {allIdeas.filter(i => i.round === 2).length}
                   </p>
                   <div className="grid gap-3">
                     {allIdeas.filter(i => i.round === 2).map(idea => {
@@ -142,19 +145,41 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
                       return (
                         <div key={idea.id} className="p-5 rounded-2xl bg-white/[0.01] border border-white/[0.04]">
                           <p className="text-lg text-white/50 leading-relaxed">{idea.text}</p>
-                          {original && <p className="text-sm text-white/15 mt-2">adapted from: {original.text?.substring(0, 60)}…</p>}
+                          {original && <p className="text-sm text-white/15 mt-2">改编自：{original.text?.substring(0, 60)}…</p>}
                           <div className="flex items-center gap-2 mt-2">
                             <div className="size-5 rounded-full flex items-center justify-center text-[9px] border border-white/[0.08]"
                               style={{ background: `${PLAYER_COLORS[colorIdx]}18`, color: PLAYER_COLORS[colorIdx] }}>
                               {author?.name?.slice(0, 2).toUpperCase()}
                             </div>
                             <span className="text-sm text-white/25">{author?.name}</span>
-                            {idea.endorsed && <span className="text-xs text-emerald-300/40">✓ endorsed</span>}
+                            {idea.endorsed && <span className="text-xs text-emerald-300/40">✓ 已认可</span>}
                           </div>
                         </div>
                       );
                     })}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {phase === 'commitment' && (
+            <div className="space-y-6">
+              <div className="text-center p-8">
+                <p className="text-6xl mb-4">☯</p>
+                <p className="text-3xl font-light text-white/70">认领一项你将负责的行动</p>
+                <p className="text-lg text-white/25 mt-3">
+                  {(gameState.commitments?.length ?? 0)} / {players.length} 人已承诺
+                </p>
+              </div>
+              {(gameState.commitments?.length ?? 0) > 0 && (
+                <div className="space-y-3">
+                  {gameState.commitments!.map(c => (
+                    <div key={c.id} className="p-4 rounded-xl bg-emerald-400/[0.04] border border-emerald-400/10">
+                      <p className="text-sm text-white/35 mb-1">{c.playerName}</p>
+                      <p className="text-xl text-white/60 leading-relaxed">{c.action}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -166,7 +191,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
               <div className="text-center p-8">
                 <p className="text-6xl mb-4">🏆</p>
                 <p className="text-4xl font-light text-white/80">{sorted[0]?.name}</p>
-                <p className="text-2xl text-white/30 mt-2">{sorted[0]?.score} points</p>
+                <p className="text-2xl text-white/30 mt-2">{sorted[0]?.score} 分</p>
               </div>
 
               <div className="space-y-2">
@@ -181,19 +206,19 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
                         {p.name?.slice(0, 2).toUpperCase()}
                       </div>
                       <span className="text-xl text-white/50">{p.name}</span>
-                      <span className="text-sm text-white/15">{p.role}</span>
+                      <span className="text-sm text-white/15">{p.role ? ROLE_LABELS[p.role] : ''}</span>
                     </div>
-                    <span className="text-2xl font-light text-white/30 tabular-nums">{p.score} pts</span>
+                    <span className="text-2xl font-light text-white/30 tabular-nums">{p.score} 分</span>
                   </div>
                 ))}
               </div>
 
               <div className="grid grid-cols-4 gap-4 mt-4">
                 {[
-                  { label: 'Ideas', value: gameState.ideas.length },
-                  { label: 'Survived', value: survivors.length },
-                  { label: 'Remixes', value: gameState.ideas.filter(i => i.round === 2).length },
-                  { label: 'Challenges', value: gameState.challenges.length },
+                  { label: '构想', value: gameState.ideas.length },
+                  { label: '存活', value: survivors.length },
+                  { label: '改造', value: gameState.ideas.filter(i => i.round === 2).length },
+                  { label: '质询', value: gameState.challenges.length },
                 ].map(s => (
                   <div key={s.label} className="text-center p-4 rounded-xl bg-white/[0.01] border border-white/[0.04]">
                     <p className="text-3xl font-light text-white/40">{s.value}</p>
@@ -209,13 +234,13 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
         <div className="space-y-4">
           {/* Problem */}
           <div className="rounded-2xl bg-white/[0.01] border border-white/[0.04] p-5">
-            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-2">Problem</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-2">讨论问题</p>
             <p className="text-lg text-white/45 leading-relaxed">{gameState.problemStatement}</p>
           </div>
 
           {/* Players + Roles */}
           <div className="rounded-2xl bg-white/[0.01] border border-white/[0.04] p-5">
-            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">Players</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">参与者</p>
             <div className="space-y-2">
               {players.map((p, i) => (
                 <div key={p.id} className="flex items-center gap-3">
@@ -225,7 +250,7 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
                     {p.name?.slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-base text-white/40 flex-1">{p.name}</span>
-                  <span className="text-sm text-white/15">{p.role}</span>
+                  <span className="text-sm text-white/15">{p.role ? ROLE_LABELS[p.role] : ''}</span>
                   <span className="text-lg font-light text-white/20 tabular-nums">{p.score}</span>
                 </div>
               ))}
@@ -236,10 +261,11 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
           {phase !== 'lobby' && phase !== 'finished' && (
             <div className="rounded-2xl bg-white/[0.01] border border-white/[0.04] p-5">
               <p className="text-sm text-white/25 leading-relaxed">
-                {phase === 'r1_submit' && 'Everyone gets 3 inspiration cards. Pick one, write your idea on your phone. No idea is too wild. No one sees yours until the reveal.'}
-                {phase === 'r1_guess' && 'Vote for ideas you think are best. Guess who wrote each one. The author is hidden — this is where the discussion starts.'}
-                {phase === 'r2_adapt' && 'Take the top ideas and make them better. Remix someone else\'s thinking. Original authors: endorse good remixes.'}
-                {phase === 'r3_challenge' && 'Challenge weak ideas. Defend strong ones. Attack the idea, not the person. This is where real decisions get made.'}
+                {phase === 'r1_submit' && '每人 3 张灵感卡，选一张后在手机上写下构想。想法可以很大胆，揭晓前互不可见。'}
+                {phase === 'r1_guess' && '为最好的构想投票，猜猜每条是谁写的。作者隐藏——讨论从这里开始。'}
+                {phase === 'r2_adapt' && '拿排名靠前的构想改造升级。原作者可以认可好的改造。'}
+                {phase === 'r3_challenge' && '质询弱项，捍卫强项。攻击想法，不攻击人。真正的决策在这里发生。'}
+                {phase === 'commitment' && '每人选一条存活构想，承诺一项具体下一步。这是本次会议的真实产出。'}
               </p>
             </div>
           )}
@@ -248,8 +274,8 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
 
       {/* ── Footer bar ── */}
       <div className="mt-6 pt-4 border-t border-white/[0.04] flex items-center justify-between text-xs text-white/15">
-        <span>Idea Forge · Every discussion ends with a decision someone owns</span>
-        {isHost && <span className="text-amber-300/30">Host view — this screen is being projected</span>}
+        <span>{brand.productName} · {brand.slogan}</span>
+        {isHost && <span className="text-amber-300/30">主持视图 — 正在投屏</span>}
       </div>
     </div>
   );

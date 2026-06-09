@@ -59,7 +59,58 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_commitments_token ON commitments(echo_token);
     CREATE INDEX IF NOT EXISTS idx_commitments_session ON commitments(session_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_room_code ON sessions(room_code);
+
+    CREATE TABLE IF NOT EXISTS active_rooms (
+      room_code TEXT PRIMARY KEY,
+      game_state_json TEXT NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
   `);
+}
+
+// ---------------------------------------------------------------------------
+// In-progress room checkpoints (survives server restart)
+// ---------------------------------------------------------------------------
+export function saveActiveRoom(gameState) {
+  const d = getDb();
+  const stmt = d.prepare(`
+    INSERT INTO active_rooms (room_code, game_state_json, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(room_code) DO UPDATE SET
+      game_state_json = excluded.game_state_json,
+      updated_at = datetime('now')
+  `);
+  stmt.run(gameState.roomCode, JSON.stringify(gameState));
+}
+
+export function loadActiveRoom(roomCode) {
+  const d = getDb();
+  const row = d.prepare('SELECT game_state_json FROM active_rooms WHERE room_code = ?').get(roomCode);
+  if (!row) return null;
+  try {
+    return JSON.parse(row.game_state_json);
+  } catch {
+    return null;
+  }
+}
+
+export function loadAllActiveRooms() {
+  const d = getDb();
+  const rows = d.prepare('SELECT game_state_json FROM active_rooms ORDER BY updated_at DESC').all();
+  const rooms = [];
+  for (const row of rows) {
+    try {
+      rooms.push(JSON.parse(row.game_state_json));
+    } catch {
+      // skip corrupt rows
+    }
+  }
+  return rooms;
+}
+
+export function deleteActiveRoom(roomCode) {
+  const d = getDb();
+  d.prepare('DELETE FROM active_rooms WHERE room_code = ?').run(roomCode);
 }
 
 // ---------------------------------------------------------------------------

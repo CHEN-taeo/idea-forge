@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHotSeat } from '../hooks/useHotSeat';
-import { INSPIRATION_CARDS, ROLE_DESCRIPTIONS } from '../data/game-data';
+import { INSPIRATION_CARDS, ROLE_DESCRIPTIONS, ROLE_LABELS } from '../data/game-data';
 import { PhaseTimer } from './PhaseTimer';
 import { cn } from './ui/utils';
 
@@ -53,15 +53,15 @@ function SetupScreen({ onCreate }: { onCreate: (names: string[], problem: string
       <div className="w-full max-w-lg">
         <div className="text-center mb-10">
           <div className="text-5xl mb-4">🔥</div>
-          <h1 className="text-3xl font-light text-white/80 mb-2">Hot Seat</h1>
-          <p className="text-base text-white/30">One screen. Everyone debates. No phones.</p>
+          <h1 className="text-3xl font-light text-white/80 mb-2">热座模式</h1>
+          <p className="text-base text-white/30">一块屏幕，当面辩论，不用手机</p>
         </div>
 
         <div className="glass rounded-2xl p-6 mb-4">
-          <label className="text-sm text-white/40 mb-2 block">What are we discussing today?</label>
+          <label className="text-sm text-white/40 mb-2 block">今天要讨论什么？</label>
           <textarea
             className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/80 text-lg p-4 resize-none outline-none focus:border-amber-300/30 placeholder:text-white/15"
-            placeholder="e.g. How should we prioritize our Q3 roadmap?"
+            placeholder="例如：Q3 路线图怎么排？"
             rows={3}
             value={problem}
             onChange={e => setProblem(e.target.value)}
@@ -69,16 +69,16 @@ function SetupScreen({ onCreate }: { onCreate: (names: string[], problem: string
         </div>
 
         <div className="glass rounded-2xl p-6 mb-6">
-          <label className="text-sm text-white/40 mb-3 block">Who's in the room? ({names.length}/8)</label>
+          <label className="text-sm text-white/40 mb-3 block">谁在房间里？（{names.length}/8）</label>
           <div className="flex gap-2 mb-3">
             <input
               className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/80 text-base px-4 py-2.5 outline-none focus:border-amber-300/30 placeholder:text-white/15"
-              placeholder="Name"
+              placeholder="名字"
               value={nameInput}
               onChange={e => setNameInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addName()}
             />
-            <button onClick={addName} className="px-5 py-2.5 rounded-xl btn-primary text-sm">Add</button>
+            <button onClick={addName} className="px-5 py-2.5 rounded-xl btn-primary text-sm">添加</button>
           </div>
           {names.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -98,7 +98,7 @@ function SetupScreen({ onCreate }: { onCreate: (names: string[], problem: string
           disabled={names.length < 2 || !problem.trim()}
           className="w-full h-14 rounded-2xl btn-primary text-lg font-medium disabled:btn-disabled"
         >
-          🔥 Start Hot Seat — {names.length} players
+          🔥 开始热座 — {names.length} 人
         </button>
       </div>
     </div>
@@ -124,10 +124,10 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
 
   const phase = game.phase;
   const phaseLabel =
-    phase === 'r1_submit' ? 'Round 1 · Brainstorm' :
-    phase === 'r1_guess' ? 'Round 1 · Vote & Guess' :
-    phase === 'r2_adapt' ? 'Round 2 · Remix' :
-    phase === 'r3_challenge' ? 'Round 3 · Challenge' : '';
+    phase === 'r1_submit' ? '第一轮 · 构思' :
+    phase === 'r1_guess' ? '第一轮 · 投票与竞猜' :
+    phase === 'r2_adapt' ? '第二轮 · 改造' :
+    phase === 'r3_challenge' ? '第三轮 · 质询' : '';
   const topIdeas = [...game.ideas.filter((i: any) => i.round === 1 && i.alive)]
     .sort((a: any, b: any) => b.votes - a.votes).slice(0, 5);
 
@@ -143,15 +143,15 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
             {phase === 'r1_submit' ? '💡' : phase === 'r2_adapt' ? '⚗️' : phase === 'r3_challenge' ? '⚔️' : '🗣️'}
           </div>
           <h1 className="text-4xl font-light text-white/80 mb-4">
-            {phase === 'r1_submit' ? 'Round 1' : phase === 'r2_adapt' ? 'Round 2 · Remix' : phase === 'r3_challenge' ? 'Round 3 · Challenge' : 'Discuss!'}
+            {phase === 'r1_submit' ? '第一轮' : phase === 'r2_adapt' ? '第二轮 · 改造' : phase === 'r3_challenge' ? '第三轮 · 质询' : '讨论！'}
           </h1>
           <p className="text-xl text-white/30 mb-2">
-            {phase === 'r1_submit' ? 'Everyone speaks. Facilitator types.' : phase === 'r2_adapt' ? 'Steal and improve the best ideas.' : phase === 'r3_challenge' ? 'Attack ideas. Defend your own.' : ''}
+            {phase === 'r1_submit' ? '大家发言，主持人输入' : phase === 'r2_adapt' ? '借鉴并改进最好的构想' : phase === 'r3_challenge' ? '质询想法，捍卫自己的' : ''}
           </p>
           <p className="text-base text-white/15 mb-8">{game.problemStatement}</p>
           <button onClick={() => setShowBreak(false)}
             className="px-8 py-4 rounded-2xl btn-primary text-xl font-medium">
-            Let's Go →
+            开始 →
           </button>
         </div>
       </div>
@@ -173,7 +173,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
           <PhaseTimer duration={phase === 'r1_submit' ? 600 : phase === 'r2_adapt' ? 480 : 600}
             onExpire={() => {}} />
           <button onClick={onNext} className="px-5 py-2.5 rounded-xl btn-primary text-base">
-            {phase === 'r3_challenge' ? 'Finish' : 'Next Phase →'}
+            {phase === 'r3_challenge' ? '结束' : '下一阶段 →'}
           </button>
         </div>
       </div>
@@ -203,7 +203,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
           {phase === 'r1_submit' && (
             <div className="glass rounded-2xl p-5">
               <p className="text-sm text-white/30 mb-2">
-                <span className="text-amber-300/60">{player?.name}</span> is speaking — facilitator, type their idea:
+                <span className="text-amber-300/60">{player?.name}</span> 正在发言 — 主持人请输入：
               </p>
               <div className="flex gap-2 mb-3 flex-wrap">
                 {player?.inspirationCards?.map((ci: number) => (
@@ -216,12 +216,12 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
               </div>
               <div className="flex gap-2">
                 <input className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/80 text-base px-4 py-3 outline-none focus:border-amber-300/30 placeholder:text-white/15"
-                  placeholder="Type what they said..." value={ideaText}
+                  placeholder="输入他们说的话…" value={ideaText}
                   onChange={e => setIdeaText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && ideaText.trim()) { onSubmitIdea(selectedPlayer, ideaText, selectedCard ?? undefined); setIdeaText(''); setSelectedCard(null); } }} />
                 <button onClick={() => { onSubmitIdea(selectedPlayer, ideaText, selectedCard ?? undefined); setIdeaText(''); setSelectedCard(null); }}
                   disabled={!ideaText.trim()}
-                  className="px-6 py-3 rounded-xl btn-primary text-base disabled:btn-disabled">Submit</button>
+                  className="px-6 py-3 rounded-xl btn-primary text-base disabled:btn-disabled">提交</button>
               </div>
             </div>
           )}
@@ -230,7 +230,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
           <div className="glass rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/[0.04]">
               <span className="text-sm text-white/20 uppercase tracking-[0.15em]">
-                {phase === 'r1_guess' ? 'All Ideas · Vote now' : 'The Wall'} · {allIdeas.length}
+                {phase === 'r1_guess' ? '全部构想 · 请投票' : '构想墙'} · {allIdeas.length}
               </span>
             </div>
             <div className="divide-y divide-white/[0.03]">
@@ -250,9 +250,9 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                           <span className="text-sm text-white/40">
                             {phase === 'r1_guess' ? '???' : author?.name}
                           </span>
-                          {idea.round === 2 && <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.04] text-white/15">Remix</span>}
-                          {isChallenged && <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400/60">Challenged</span>}
-                          {idea.endorsed && <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/60">Endorsed</span>}
+                          {idea.round === 2 && <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.04] text-white/15">改造</span>}
+                          {isChallenged && <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400/60">被质询</span>}
+                          {idea.endorsed && <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/60">已认可</span>}
                         </div>
                         <p className="text-base text-white/60 leading-relaxed">{idea.text}</p>
                         {idea.inspirationCard !== undefined && (
@@ -262,7 +262,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                           <div className="mt-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
                             <p className="text-xs text-red-300/50">{challenge.challengerName}: {challenge.reason}</p>
                             {idea.defenseResponse && (
-                              <p className="text-xs text-white/40 mt-1">↳ {idea.defenseResponse} {idea.defenseAccepted ? '(Accepted & improved)' : '(Refuted)'}</p>
+                              <p className="text-xs text-white/40 mt-1">↳ {idea.defenseResponse} {idea.defenseAccepted ? '（已接受并改进）' : '（已反驳）'}</p>
                             )}
                           </div>
                         )}
@@ -278,22 +278,22 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                         {/* Adapt button in R2 */}
                         {phase === 'r2_adapt' && idea.round === 1 && idea.authorId !== selectedPlayer && (
                           <button onClick={() => { setAdaptTarget(idea.id); setAdaptText(''); }}
-                            className="px-3 py-1.5 rounded-lg btn-ghost text-sm">Remix</button>
+                            className="px-3 py-1.5 rounded-lg btn-ghost text-sm">改造</button>
                         )}
                         {/* Endorse in R2 */}
                         {phase === 'r2_adapt' && idea.round === 2 && idea.originalAuthorId === selectedPlayer && !idea.endorsed && (
                           <button onClick={() => onEndorse(idea.id, selectedPlayer)}
-                            className="px-3 py-1.5 rounded-lg btn-primary text-sm">Endorse ✓</button>
+                            className="px-3 py-1.5 rounded-lg btn-primary text-sm">认可 ✓</button>
                         )}
                         {/* Challenge in R3 */}
                         {phase === 'r3_challenge' && !isChallenged && idea.authorId !== selectedPlayer && (
                           <button onClick={() => { setChallengeTarget(idea.id); setChallengeReason(''); }}
-                            className="px-3 py-1.5 rounded-lg btn-danger text-sm">Challenge</button>
+                            className="px-3 py-1.5 rounded-lg btn-danger text-sm">质询</button>
                         )}
                         {/* Defend in R3 */}
                         {phase === 'r3_challenge' && isChallenged && idea.authorId === selectedPlayer && !idea.defenseResponse && (
                           <button onClick={() => { setDefendTarget(idea.id); setDefendText(''); }}
-                            className="px-3 py-1.5 rounded-lg btn-primary text-sm">Defend</button>
+                            className="px-3 py-1.5 rounded-lg btn-primary text-sm">答辩</button>
                         )}
                       </div>
                     </div>
@@ -302,11 +302,11 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                     {adaptTarget === idea.id && (
                       <div className="mt-3 flex gap-2">
                         <input className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white/70 text-sm px-3 py-2 outline-none"
-                          placeholder="Remix this idea..." value={adaptText}
+                          placeholder="改造这条构想…" value={adaptText}
                           onChange={e => setAdaptText(e.target.value)} />
                         <button onClick={() => { onAdapt(selectedPlayer, idea.id, adaptText); setAdaptTarget(null); }}
-                          disabled={!adaptText.trim()} className="px-4 py-2 rounded-lg btn-primary text-sm disabled:btn-disabled">Submit</button>
-                        <button onClick={() => setAdaptTarget(null)} className="px-3 py-2 rounded-lg btn-danger text-sm">Cancel</button>
+                          disabled={!adaptText.trim()} className="px-4 py-2 rounded-lg btn-primary text-sm disabled:btn-disabled">提交</button>
+                        <button onClick={() => setAdaptTarget(null)} className="px-3 py-2 rounded-lg btn-danger text-sm">取消</button>
                       </div>
                     )}
 
@@ -314,11 +314,11 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                     {challengeTarget === idea.id && (
                       <div className="mt-3 flex gap-2">
                         <input className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white/70 text-sm px-3 py-2 outline-none"
-                          placeholder="The fatal flaw is..." value={challengeReason}
+                          placeholder="致命缺陷是…" value={challengeReason}
                           onChange={e => setChallengeReason(e.target.value)} />
                         <button onClick={() => { onChallenge(selectedPlayer, idea.id, challengeReason); setChallengeTarget(null); }}
-                          disabled={!challengeReason.trim()} className="px-4 py-2 rounded-lg btn-danger text-sm disabled:btn-disabled">Challenge</button>
-                        <button onClick={() => setChallengeTarget(null)} className="px-3 py-2 rounded-lg btn-ghost text-sm">Cancel</button>
+                          disabled={!challengeReason.trim()} className="px-4 py-2 rounded-lg btn-danger text-sm disabled:btn-disabled">质询</button>
+                        <button onClick={() => setChallengeTarget(null)} className="px-3 py-2 rounded-lg btn-ghost text-sm">取消</button>
                       </div>
                     )}
 
@@ -326,13 +326,13 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                     {defendTarget === idea.id && (
                       <div className="mt-3 flex gap-2">
                         <input className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white/70 text-sm px-3 py-2 outline-none"
-                          placeholder="My defense..." value={defendText}
+                          placeholder="我的答辩…" value={defendText}
                           onChange={e => setDefendText(e.target.value)} />
                         <button onClick={() => { onDefend(idea.id, defendText, false, selectedPlayer); setDefendTarget(null); }}
-                          disabled={!defendText.trim()} className="px-4 py-2 rounded-lg btn-primary text-sm disabled:btn-disabled">Refute</button>
+                          disabled={!defendText.trim()} className="px-4 py-2 rounded-lg btn-primary text-sm disabled:btn-disabled">反驳</button>
                         <button onClick={() => { onDefend(idea.id, defendText, true, selectedPlayer); setDefendTarget(null); }}
-                          disabled={!defendText.trim()} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-sm">Accept & Improve</button>
-                        <button onClick={() => setDefendTarget(null)} className="px-3 py-2 rounded-lg btn-ghost text-sm">Cancel</button>
+                          disabled={!defendText.trim()} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-sm">接受并改进</button>
+                        <button onClick={() => setDefendTarget(null)} className="px-3 py-2 rounded-lg btn-ghost text-sm">取消</button>
                       </div>
                     )}
                   </div>
@@ -346,7 +346,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
         <div className="space-y-3">
           {/* Roles */}
           <div className="glass rounded-2xl p-4">
-            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">Roles</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">角色</p>
             <div className="space-y-1.5">
               {players.map((p: any, i: number) => (
                 <div key={p.id} className="flex items-center gap-2 text-sm">
@@ -355,7 +355,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
                     {p.name.slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-white/40">{p.name}</span>
-                  <span className="text-white/15 ml-auto">{p.role}</span>
+                  <span className="text-white/15 ml-auto">{p.role ? ROLE_LABELS[p.role] : ''}</span>
                 </div>
               ))}
             </div>
@@ -363,7 +363,7 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
 
           {/* Scoreboard */}
           <div className="glass rounded-2xl p-4">
-            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">Scores</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-white/15 mb-3">积分</p>
             {[...players].sort((a: any, b: any) => b.score - a.score).map((p: any, i: number) => (
               <div key={p.id} className="flex items-center justify-between py-1.5 text-sm">
                 <span className={cn(i === 0 ? 'text-amber-200/60' : 'text-white/30')}>{p.name}</span>
@@ -375,10 +375,10 @@ function GameScreen({ game, onNext, onSubmitIdea, onVote, onAdapt, onEndorse, on
           {/* Phase info */}
           <div className="glass rounded-2xl p-4">
             <p className="text-sm text-white/25 leading-relaxed">
-              {phase === 'r1_submit' && 'Everyone gets 3 inspiration cards. Pick one, speak your idea. Facilitator types. No idea is too wild.'}
-              {phase === 'r1_guess' && 'Vote for the best ideas. Guess who wrote what. Debate is encouraged.'}
-              {phase === 'r2_adapt' && 'Take the top ideas and remix them. Make them better. Original author can endorse for bonus points.'}
-              {phase === 'r3_challenge' && 'Attack weak ideas. Defend strong ones. This is where the real discussion happens.'}
+              {phase === 'r1_submit' && '每人 3 张灵感卡，选一张后说出构想，主持人输入。想法可以很大胆。'}
+              {phase === 'r1_guess' && '为最好的构想投票，猜猜是谁写的。鼓励辩论。'}
+              {phase === 'r2_adapt' && '拿排名靠前的构想改造升级。原作者认可可加分。'}
+              {phase === 'r3_challenge' && '质询弱项，捍卫强项。真正的讨论在这里发生。'}
             </p>
           </div>
         </div>
@@ -401,48 +401,48 @@ function FinishedScreen({ game, onReset }: any) {
       <div className="text-center max-w-xl animate-scale-in">
         <div className="text-6xl mb-6">🏆</div>
         <h1 className="text-4xl font-light text-white/80 mb-2">{winner?.name}</h1>
-        <p className="text-2xl text-white/30 mb-8">{winner?.score} points · MVP</p>
+        <p className="text-2xl text-white/30 mb-8">{winner?.score} 分 · 最高分</p>
 
         <div className="glass rounded-2xl p-6 mb-6 text-left">
-          <p className="text-xs uppercase tracking-[0.15em] text-white/20 mb-4">Session Results</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-white/20 mb-4">会议成果</p>
           <div className="grid grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Ideas', value: game.ideas.length },
-              { label: 'Alive', value: survivors.length },
-              { label: 'Remixes', value: game.ideas.filter((i: any) => i.round === 2).length },
-              { label: 'Challenges', value: game.challenges.length },
+              { label: '构想', value: game.ideas.length },
+              { label: '存活', value: survivors.length },
+              { label: '改造', value: game.ideas.filter((i: any) => i.round === 2).length },
+              { label: '质询', value: game.challenges.length },
             ].map((s, i) => (
               <div key={i} className="text-center"><p className="text-3xl font-light text-white/40">{s.value}</p><p className="text-xs text-white/15">{s.label}</p></div>
             ))}
           </div>
 
-          <p className="text-xs uppercase tracking-[0.15em] text-white/20 mb-3">Final Standings</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-white/20 mb-3">最终排名</p>
           {sorted.map((p: any, i: number) => (
             <div key={p.id} className="flex items-center justify-between py-2 text-base">
-              <span className={cn(i === 0 ? 'text-amber-200/70' : 'text-white/35')}>{i + 1}. {p.name} — {p.role}</span>
-              <span className="text-white/25 tabular-nums">{p.score} pts</span>
+              <span className={cn(i === 0 ? 'text-amber-200/70' : 'text-white/35')}>{i + 1}. {p.name} — {p.role ? ROLE_LABELS[p.role] : ''}</span>
+              <span className="text-white/25 tabular-nums">{p.score} 分</span>
             </div>
           ))}
 
           {mvp && (
             <div className="mt-4 p-4 rounded-xl bg-amber-300/[0.04] border border-amber-300/[0.08]">
-              <p className="text-xs text-white/15 mb-1">Top Idea</p>
+              <p className="text-xs text-white/15 mb-1">最佳构想</p>
               <p className="text-base text-white/50">{mvp.text}</p>
-              <p className="text-xs text-white/20 mt-1">{mvp.votes} votes</p>
+              <p className="text-xs text-white/20 mt-1">{mvp.votes} 票</p>
             </div>
           )}
         </div>
 
         <div className="glass rounded-2xl p-6 mb-6">
           <p className="text-lg text-white/50 leading-relaxed">
-            Now ask everyone: <span className="text-amber-200/70">"What's one thing you'll do about this in the next two weeks?"</span>
+            现在问大家：<span className="text-amber-200/70">「接下来两周，你会为这件事做哪一件具体的事？」</span>
           </p>
-          <p className="text-sm text-white/20 mt-3">Write their answers somewhere. This is where ideas become action.</p>
+          <p className="text-sm text-white/20 mt-3">把答案记下来。想法在这里变成行动。</p>
         </div>
 
         <button onClick={onReset}
           className="px-8 py-4 rounded-2xl btn-primary text-xl">
-          New Session →
+          新一场 →
         </button>
       </div>
     </div>

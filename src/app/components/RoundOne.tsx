@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GameState, Player } from '../types/game';
-import { ROLE_DESCRIPTIONS, INSPIRATION_CARDS } from '../data/game-data';
+import { ROLE_DESCRIPTIONS, ROLE_LABELS, INSPIRATION_CARDS } from '../data/game-data';
 import { ScrollArea } from './ui/scroll-area';
 import { ProgressStepper } from './ProgressStepper';
 import { PhaseTimer } from './PhaseTimer';
@@ -57,7 +57,7 @@ export function RoundOne({
     <div className="min-h-screen p-3 perspective-scene">
       <div className="max-w-3xl mx-auto animate-scale-in page-card p-4">
 
-        <ProgressStepper currentPhase={phase} />
+        <ProgressStepper currentPhase={phase} template={gameState.template} />
 
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/20">
@@ -75,7 +75,7 @@ export function RoundOne({
             {/* Role */}
             <div className="glass px-3 py-2.5 rounded-xl">
               <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1">角色</p>
-              <p className="text-xs text-white/60">{currentPlayer.role}</p>
+              <p className="text-xs text-white/60">{currentPlayer.role ? ROLE_LABELS[currentPlayer.role] : ''}</p>
               {currentPlayer.role && ROLE_DESCRIPTIONS[currentPlayer.role] && (
                 <p className="text-[11px] text-white/25 mt-0.5 leading-relaxed">
                   {ROLE_DESCRIPTIONS[currentPlayer.role]}
