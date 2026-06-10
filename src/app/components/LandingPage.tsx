@@ -7,9 +7,10 @@ interface LandingPageProps {
   onJoinGame: (name: string, roomCode: string) => void;
   onHotSeat: () => void;
   onSolo: () => void;
+  onRoundtable: () => void;
 }
 
-export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotSeat, onSolo }: LandingPageProps) {
+export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotSeat, onSolo, onRoundtable }: LandingPageProps) {
   const [mode, setMode] = useState<'create' | 'join' | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [playerName, setPlayerName] = useState('');
@@ -55,6 +56,18 @@ export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotS
               <span className="text-base">🧠</span>
               开始{brand.soloName}
               <span className="text-[10px] text-white/20">— 一个人，15 分钟想明白</span>
+            </button>
+
+            <button
+              onClick={onRoundtable}
+              className="w-full h-[3.25rem] rounded-xl rt-featured-btn text-sm font-normal text-white/70 flex items-center justify-center gap-2.5 group"
+            >
+              <span className="text-lg rt-float inline-block">🪑</span>
+              <span className="flex flex-col items-start leading-tight">
+                <span>围炉群英会</span>
+                <span className="text-[10px] text-amber-200/35 font-normal">请大佬入席 · 陪你聊透</span>
+              </span>
+              <span className="ml-auto text-[10px] text-amber-300/40 group-hover:text-amber-300/70 transition-colors">新 →</span>
             </button>
 
             <button

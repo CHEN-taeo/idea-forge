@@ -20,7 +20,7 @@ The two products **share no runtime code**. Confirm which product a request targ
 - **AI:** OpenAI-compatible API (DeepSeek by default), in `ai.js`
 
 ### Entry points
-- `index.html` → `src/main.tsx` → `src/app/App.tsx` (routes game modes: lobby, rounds, solo, hot-seat, screen view)
+- `index.html` → `src/main.tsx` → `src/app/App.tsx` (routes game modes: lobby, rounds, solo, roundtable, hot-seat, screen view)
 - `server.js` — HTTP + Socket.IO + REST; serves `dist/` in production (SPA fallback)
 - `ai.js` — all server-side AI; `db.js` — SQLite layer (tables: `sessions`, `commitments`, `active_rooms`)
 - `electron-main.js` — desktop wrapper; starts `server.js`, loads `http://localhost:3001`
@@ -47,6 +47,7 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 ### AI surface (`ai.js`)
 - Functions: `generatePrompts`, `expandIdea`, `analyzeRound`, `generateSmartAction`, `soloChallengeIdea`, `getStatus`
 - REST: `/api/ai/status`, `/api/ai/solo/angles`, `/api/ai/smart-action`, `/api/ai/solo/challenge`
+- REST (围炉群英会): `/api/ai/persona/dispatch`, `/api/ai/persona/reply`, `/api/ai/persona/summarize` — see **`docs/构想熔炉-围炉群英会.md`**
 - Socket: `ai_generate_prompts`, `ai_expand`, `ai_round_summary`
 - **No API key → hardcoded Chinese template fallback.** Preserve this fallback path in any AI change.
 

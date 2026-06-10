@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { exec } from 'child_process';
 import { getDb, saveSession, getSession, createCommitment, getCommitmentByToken, getCommitmentsBySession, getAllSessions, saveActiveRoom, loadActiveRoom, loadAllActiveRooms, deleteActiveRoom } from './db.js';
-import { generatePrompts, expandIdea, analyzeRound, generateSmartAction, soloChallengeIdea, getStatus } from './ai.js';
+import { generatePrompts, expandIdea, analyzeRound, generateSmartAction, soloChallengeIdea, personaReply, pickPersonaResponders, summarizeRoundtable, getStatus } from './ai.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -121,6 +121,61 @@ app.post('/api/ai/solo/challenge', async (req, res) => {
     res.json({ question, mode: getStatus().mode });
   } catch (err) {
     res.status(500).json({ error: err.message || '生成失败' });
+  }
+});
+
+app.post('/api/ai/persona/reply', async (req, res) => {
+  const { personaId, topic, history, userMessage, userName, lastSpeaker } = req.body || {};
+  if (!personaId?.trim() || !topic?.trim()) {
+    return res.status(400).json({ error: '缺少人物或主题' });
+  }
+  try {
+    const reply = await personaReply(
+      personaId.trim(),
+      topic.trim(),
+      Array.isArray(history) ? history : [],
+      typeof userMessage === 'string' ? userMessage : '',
+      userName?.trim() || '我',
+      typeof lastSpeaker === 'string' ? lastSpeaker : ''
+    );
+    res.json({ reply, mode: getStatus().mode });
+  } catch (err) {
+    res.status(500).json({ error: err.message || '生成失败' });
+  }
+});
+
+app.post('/api/ai/persona/dispatch', async (req, res) => {
+  const { personaIds, topic, history, userMessage, userName, targetPersonaId } = req.body || {};
+  if (!Array.isArray(personaIds) || !personaIds.length || !topic?.trim()) {
+    return res.status(400).json({ error: '缺少嘉宾或主题' });
+  }
+  try {
+    const order = await pickPersonaResponders(
+      personaIds.map(String),
+      topic.trim(),
+      Array.isArray(history) ? history : [],
+      typeof userMessage === 'string' ? userMessage : '',
+      userName?.trim() || '我',
+      targetPersonaId?.trim() || ''
+    );
+    res.json({ order, mode: getStatus().mode });
+  } catch (err) {
+    res.status(500).json({ error: err.message || '调度失败' });
+  }
+});
+
+app.post('/api/ai/persona/summarize', async (req, res) => {
+  const { topic, history, personaIds } = req.body || {};
+  if (!topic?.trim()) return res.status(400).json({ error: '缺少主题' });
+  try {
+    const summary = await summarizeRoundtable(
+      topic.trim(),
+      Array.isArray(history) ? history : [],
+      Array.isArray(personaIds) ? personaIds.map(String) : []
+    );
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: err.message || '总结失败' });
   }
 });
 

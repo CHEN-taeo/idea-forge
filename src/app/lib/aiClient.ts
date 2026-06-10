@@ -46,6 +46,77 @@ export async function fetchSmartAction(
   return res.json();
 }
 
+export interface PersonaTurn {
+  speaker: string;
+  text: string;
+}
+
+export async function fetchPersonaReply(
+  personaId: string,
+  topic: string,
+  history: PersonaTurn[],
+  userMessage: string,
+  userName?: string,
+  lastSpeaker?: string
+): Promise<{ reply: string; mode: AiMode }> {
+  const res = await fetch(apiUrl('/api/ai/persona/reply'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ personaId, topic, history, userMessage, userName, lastSpeaker }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || '人物回应失败');
+  }
+  return res.json();
+}
+
+export async function fetchPersonaDispatch(
+  personaIds: string[],
+  topic: string,
+  history: PersonaTurn[],
+  userMessage: string,
+  userName?: string,
+  targetPersonaId?: string
+): Promise<{ order: string[]; mode: AiMode }> {
+  const res = await fetch(apiUrl('/api/ai/persona/dispatch'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ personaIds, topic, history, userMessage, userName, targetPersonaId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || '调度失败');
+  }
+  return res.json();
+}
+
+export interface RoundtableSummary {
+  consensus: string;
+  disagreement: string;
+  gap: string;
+  nextStep: string;
+  raw?: string;
+  mode?: AiMode;
+}
+
+export async function fetchRoundtableSummary(
+  topic: string,
+  history: PersonaTurn[],
+  personaIds: string[]
+): Promise<RoundtableSummary> {
+  const res = await fetch(apiUrl('/api/ai/persona/summarize'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic, history, personaIds }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || '总结失败');
+  }
+  return res.json();
+}
+
 export async function fetchSoloChallenge(
   ideaText: string,
   problem: string

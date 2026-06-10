@@ -9,6 +9,7 @@ import { CommitmentPhase } from './components/CommitmentPhase';
 import { GameFinished } from './components/GameFinished';
 import { HotSeatApp } from './components/HotSeatApp';
 import { SoloMode } from './components/SoloMode';
+import { RoundtableMode } from './components/RoundtableMode';
 import { ScreenView } from './components/ScreenView';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 export default function App() {
   const [hotSeat, setHotSeat] = useState(false);
   const [solo, setSolo] = useState(false);
+  const [roundtable, setRoundtable] = useState(false);
   const [screenMode, setScreenMode] = useState(false);
   const {
     gameState,
@@ -114,6 +116,19 @@ export default function App() {
     );
   }
 
+  // 围炉群英会 — 和 AI 大佬们圆桌对谈
+  if (roundtable) {
+    return (
+      <>
+        <button onClick={() => setRoundtable(false)}
+          className="fixed top-4 left-4 z-50 px-3.5 py-2 rounded-xl bg-black/30 backdrop-blur-md border border-white/[0.08] text-white/40 text-xs hover:text-white/65 hover:border-white/[0.14] transition-all">
+          ← 离开围炉
+        </button>
+        <RoundtableMode />
+      </>
+    );
+  }
+
   // Hot Seat mode
   if (hotSeat) {
     return (
@@ -136,6 +151,7 @@ export default function App() {
           onJoinGame={handleJoinGame}
           onHotSeat={() => setHotSeat(true)}
           onSolo={() => setSolo(true)}
+          onRoundtable={() => setRoundtable(true)}
         />
         <Toaster />
       </>
