@@ -257,6 +257,10 @@ function countSpeakerTurns(history, speakerName) {
   return history.filter(h => h.speaker === speakerName).length;
 }
 
+function orderNames(order) {
+  return order.map(id => PERSONA_PROMPTS[id]?.name || id).join(' → ');
+}
+
 /** 模板兜底：优先选最近发言少的人 */
 function templateDispatch(personaIds, history, userMessage, explicitId) {
   if (explicitId && personaIds.includes(explicitId)) return [explicitId];
@@ -275,10 +279,18 @@ function templateDispatch(personaIds, history, userMessage, explicitId) {
 
 /**
  * 智能调度：决定本轮哪几位嘉宾、以什么顺序发言。
+ * @returns {{ order: string[], mode: 'ai'|'template'|'manual', note: string }}
  */
 async function pickPersonaResponders(personaIds, topic, history = [], userMessage = '', userName = '我', explicitId = '') {
-  if (!personaIds?.length) return [];
-  if (explicitId && personaIds.includes(explicitId)) return [explicitId];
+  if (!personaIds?.length) return { order: [], mode: 'template', note: '' };
+  if (explicitId && personaIds.includes(explicitId)) {
+    const name = PERSONA_PROMPTS[explicitId]?.name || explicitId;
+    return {
+      order: [explicitId],
+      mode: 'manual',
+      note: `你 @ 指定了 ${name} 接话`,
+    };
+  }
 
   const idList = personaIds.join(', ');
   const nameList = personaIds.map(id => `${id}=${PERSONA_PROMPTS[id]?.name || id}`).join('、');
@@ -289,7 +301,7 @@ async function pickPersonaResponders(personaIds, topic, history = [], userMessag
 
   const ai = await callAI(
     coachSystem(
-      '你是圆桌讨论主持人。根据最新对话，选出最应该接话的 1-3 位嘉宾及顺序。只输出 JSON：{"order":["id1","id2"]}，id 必须来自给定列表，不要解释。'
+      '你是圆桌讨论主持人。根据最新对话，选出最应该接话的 1-3 位嘉宾及顺序。只输出 JSON：{"order":["id1","id2"],"reason":"一句话说明为何选他们及顺序"}，id 必须来自给定列表，reason 用简体中文。'
     ),
     `话题：${topic}\n可选 id：${idList}\n（${nameList}）\n\n最近对话：\n${transcript || '（刚开始）'}\n${userLine}\n\n谁该接话？`
   );
@@ -298,14 +310,28 @@ async function pickPersonaResponders(personaIds, topic, history = [], userMessag
     try {
       const match = ai.match(/\{[\s\S]*\}/);
       if (match) {
-        const { order } = JSON.parse(match[0]);
+        const { order, reason } = JSON.parse(match[0]);
         const picked = (Array.isArray(order) ? order : []).filter(id => personaIds.includes(id));
-        if (picked.length) return picked.slice(0, 3);
+        if (picked.length) {
+          const slice = picked.slice(0, 3);
+          return {
+            order: slice,
+            mode: 'ai',
+            note: reason?.trim() || `AI 安排发言顺序：${orderNames(slice)}`,
+          };
+        }
       }
     } catch { /* fall through */ }
   }
 
-  return templateDispatch(personaIds, history, userMessage, explicitId);
+  const order = templateDispatch(personaIds, history, userMessage, explicitId);
+  return {
+    order,
+    mode: 'template',
+    note: userMessage?.trim()
+      ? `离线模式 · 发言较少的嘉宾优先：${orderNames(order)}`
+      : `离线模式 · 嘉宾继续互相对话：${orderNames(order)}`,
+  };
 }
 
 /**
@@ -313,7 +339,9 @@ async function pickPersonaResponders(personaIds, topic, history = [], userMessag
  */
 async function personaReply(personaId, topic, history = [], userMessage = '', userName = '我', lastSpeaker = '') {
   const p = PERSONA_PROMPTS[personaId];
-  if (!p) return personaTemplateReply(personaId, lastSpeaker);
+  if (!p) {
+    return { reply: personaTemplateReply(personaId, lastSpeaker), mode: 'template' };
+  }
 
   const transcript = history
     .slice(-8)
@@ -333,9 +361,12 @@ async function personaReply(personaId, topic, history = [], userMessage = '', us
     `讨论主题：${topic}\n\n[对话记录]\n${transcript || '（刚开始）'}${userLine}${respondHint}\n\n请以「${p.name}」的身份回应：`
   );
   if (ai) {
-    return ai.replace(/^["'「]+|["'」]+$/g, '').trim();
+    return {
+      reply: ai.replace(/^["'「]+|["'」]+$/g, '').trim(),
+      mode: 'ai',
+    };
   }
-  return personaTemplateReply(personaId, lastSpeaker);
+  return { reply: personaTemplateReply(personaId, lastSpeaker), mode: 'template' };
 }
 
 const TEMPLATE_ROUNDTABLE_SUMMARY = {

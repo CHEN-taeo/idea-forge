@@ -1,0 +1,32 @@
+[
+  {
+    "id": "src_dhu_jw",
+    "type": "web",
+    "url": "https://jw.dhu.edu.cn/tzgg/list1.htm",
+    "room": "东华教务处",
+    "enabled": true,
+    "lastPoll": 1781094695364,
+    "lastCount": 0,
+    "lastError": ""
+  },
+  {
+    "id": "src_dhu_xs",
+    "type": "web",
+    "url": "https://web.dhu.edu.cn/dhuzizhu/tzgg/list1.htm",
+    "room": "东华学生资助",
+    "enabled": true,
+    "lastPoll": 1781094699997,
+    "lastCount": 0,
+    "lastError": ""
+  },
+  {
+    "id": "src_dhu_main",
+    "type": "web",
+    "url": "https://www.dhu.edu.cn/tzgg/list1.htm",
+    "room": "东华大学官网",
+    "enabled": true,
+    "lastPoll": 1781094720005,
+    "lastCount": 0,
+    "lastError": "The operation was aborted due to timeout"
+  }
+]

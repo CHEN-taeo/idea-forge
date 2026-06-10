@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './ui/utils';
 import { brand } from '../lib/brand';
 import { PERSONAS, getPersona, type Persona } from '../data/personas';
-import { fetchPersonaReply, fetchPersonaDispatch, fetchRoundtableSummary, fetchSmartAction, type PersonaTurn, type RoundtableSummary } from '../lib/aiClient';
+import { fetchPersonaReply, fetchPersonaDispatch, fetchRoundtableSummary, fetchSmartAction, fetchAiStatus, type PersonaTurn, type RoundtableSummary, type AiMode, type DispatchMode } from '../lib/aiClient';
 import { PersonaPortrait } from './PersonaPortrait';
 import { guestSeats, userSeat, tableEllipse } from '../lib/roundtableLayout';
 
@@ -13,10 +13,11 @@ interface Msg {
   name: string;
   text: string;
   color: string;
+  replyMode?: AiMode;
 }
 
-let _id = 0;
-function nid() { return `rt_${++_id}`; }
+const PERSONA_DISCLAIMER =
+  '席位嘉宾由 AI 以风格化角色扮演生成，不代表真实人物或其观点，仅供思辨练习。';
 
 const MAX_PICK = 3;
 const USER_COLOR = '#fbbf24';
@@ -46,6 +47,92 @@ const DEBRIEF_QUESTIONS = [
   { id: 'heard', text: '我感到被倾听' },
   { id: 'safe', text: '我不担心因说错而被否定' },
 ] as const;
+
+let _id = 0;
+function nid() { return `rt_${++_id}`; }
+
+function ReplyModeBadge({ mode }: { mode: AiMode }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center text-[9px] px-1.5 py-0.5 rounded-md tracking-wide',
+        mode === 'ai'
+          ? 'text-sky-300/60 bg-sky-400/[0.08] border border-sky-400/15'
+          : 'text-white/28 bg-white/[0.04] border border-white/[0.08]'
+      )}
+    >
+      {mode === 'ai' ? 'AI · 风格演绎' : '离线模板'}
+    </span>
+  );
+}
+
+function AiStatusChip({ enabled, model }: { enabled: boolean; model?: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border',
+        enabled
+          ? 'text-sky-300/65 bg-sky-400/[0.08] border-sky-400/15'
+          : 'text-white/28 bg-white/[0.04] border-white/[0.08]'
+      )}
+      title={enabled ? `AI 在线${model ? ` · ${model}` : ''}` : '未配置 API Key，嘉宾回复使用离线模板'}
+    >
+      <span className={cn('size-1.5 rounded-full', enabled ? 'bg-sky-400/80' : 'bg-white/25')} />
+      {enabled ? 'AI 在线' : '离线模板模式'}
+    </span>
+  );
+}
+
+function DispatchNoteBar({
+  note,
+  mode,
+  expanded,
+  onToggle,
+}: {
+  note: string;
+  mode: DispatchMode;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  if (!note) return null;
+  const prefix =
+    mode === 'manual' ? '指定接话' : mode === 'ai' ? 'AI 调度' : '离线调度';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-lg mb-4"
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full text-left px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-amber-300/20 transition-colors"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[9px] uppercase tracking-[0.14em] text-amber-200/40">{prefix}</span>
+          <span className="text-[10px] text-white/25">{expanded ? '收起' : '展开'}</span>
+        </div>
+        <p className={cn('text-[11px] text-white/45 leading-relaxed mt-1', !expanded && 'line-clamp-1')}>
+          {note}
+        </p>
+      </button>
+    </motion.div>
+  );
+}
+
+function PersonaDisclaimer({ className }: { className?: string }) {
+  return (
+    <p
+      className={cn(
+        'text-[10px] text-white/28 leading-relaxed px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06]',
+        className
+      )}
+    >
+      {PERSONA_DISCLAIMER}
+    </p>
+  );
+}
 
 function parseMention(text: string, personas: Persona[]): { text: string; targetId?: string } {
   for (const p of personas) {
@@ -89,10 +176,11 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
       )}
       <div className={cn('max-w-[min(78%,420px)]', mine && 'flex flex-col items-end')}>
         <p
-          className={cn('text-[10px] mb-1.5 font-medium tracking-wide', mine ? 'text-amber-200/55' : '')}
+          className={cn('text-[10px] mb-1.5 font-medium tracking-wide flex items-center gap-2 flex-wrap', mine ? 'text-amber-200/55 justify-end' : '')}
           style={!mine ? { color: `${msg.color}cc` } : undefined}
         >
-          {msg.name}
+          <span>{msg.name}</span>
+          {!mine && msg.replyMode && <ReplyModeBadge mode={msg.replyMode} />}
         </p>
         <div
           className={cn(
@@ -153,6 +241,7 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
           <p className="text-sm text-white/35 max-w-xs mx-auto leading-relaxed">
             请几位思想者入席，围炉夜话，把问题聊透
           </p>
+          <PersonaDisclaimer className="max-w-sm mx-auto mt-5 text-left" />
         </motion.div>
 
         {/* 步骤指示 */}
@@ -480,12 +569,23 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
   const [input, setInput] = useState('');
   const [thinkingId, setThinkingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [aiMode, setAiMode] = useState<'ai' | 'template' | null>(null);
+  const [aiOnline, setAiOnline] = useState<{ enabled: boolean; model?: string } | null>(null);
+  const [dispatchNote, setDispatchNote] = useState('');
+  const [dispatchMode, setDispatchMode] = useState<DispatchMode>('template');
+  const [dispatchExpanded, setDispatchExpanded] = useState(true);
   const [exported, setExported] = useState(false);
 
   const historyRef = useRef<PersonaTurn[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAiStatus().then(status => {
+      if (!cancelled) setAiOnline({ enabled: status.enabled, model: status.model });
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -499,7 +599,7 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
   const runRound = async (userMessage = '', targetId?: string) => {
     setBusy(true);
     try {
-      const { order, mode } = await fetchPersonaDispatch(
+      const { order, mode, note } = await fetchPersonaDispatch(
         personas.map(p => p.id),
         topic,
         historyRef.current.slice(-8),
@@ -507,7 +607,11 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
         userName,
         targetId
       );
-      setAiMode(mode);
+      if (note) {
+        setDispatchNote(note);
+        setDispatchMode(mode);
+        setDispatchExpanded(true);
+      }
       const ids = order.length ? order : personas.map(p => p.id).slice(0, Math.min(2, personas.length));
       let last = userMessage.trim() ? userName : lastSpeakerName(historyRef.current);
 
@@ -519,11 +623,17 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
           const { reply, mode: replyMode } = await fetchPersonaReply(
             p.id, topic, historyRef.current.slice(-8), userMessage, userName, last
           );
-          setAiMode(replyMode);
-          pushMessage({ id: nid(), speakerId: p.id, name: p.name, text: reply, color: p.color });
+          pushMessage({ id: nid(), speakerId: p.id, name: p.name, text: reply, color: p.color, replyMode });
           last = p.name;
         } catch {
-          pushMessage({ id: nid(), speakerId: p.id, name: p.name, text: '（一时语塞，没接上话）', color: p.color });
+          pushMessage({
+            id: nid(),
+            speakerId: p.id,
+            name: p.name,
+            text: '（一时语塞，没接上话）',
+            color: p.color,
+            replyMode: 'template',
+          });
           last = p.name;
         }
       }
@@ -531,11 +641,12 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
       /* dispatch failed — fallback one speaker */
       const p = personas[0];
       if (p) {
+        setDispatchNote('调度失败 · 离线兜底，由第一位嘉宾接话');
+        setDispatchMode('template');
         setThinkingId(p.id);
         try {
           const { reply, mode } = await fetchPersonaReply(p.id, topic, historyRef.current.slice(-8), userMessage, userName);
-          setAiMode(mode);
-          pushMessage({ id: nid(), speakerId: p.id, name: p.name, text: reply, color: p.color });
+          pushMessage({ id: nid(), speakerId: p.id, name: p.name, text: reply, color: p.color, replyMode: mode });
         } catch { /* ignore */ }
       }
     } finally {
@@ -566,7 +677,10 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-1 px-6"
         >
-          <p className="text-[9px] uppercase tracking-[0.2em] text-amber-200/35 mb-1.5">围炉进行中</p>
+          <div className="flex items-center justify-center gap-2 mb-1.5 flex-wrap">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-amber-200/35">围炉进行中</p>
+            {aiOnline && <AiStatusChip enabled={aiOnline.enabled} model={aiOnline.model} />}
+          </div>
           <p className="text-[13px] text-white/50 leading-relaxed line-clamp-2">{topic}</p>
         </motion.div>
         <RoundTable personas={personas} userName={userName} thinkingId={thinkingId} />
@@ -574,6 +688,15 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
 
       {/* 对话区 */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-5 min-h-0">
+        {dispatchNote && messages.length > 0 && (
+          <DispatchNoteBar
+            note={dispatchNote}
+            mode={dispatchMode}
+            expanded={dispatchExpanded}
+            onToggle={() => setDispatchExpanded(v => !v)}
+          />
+        )}
+
         {messages.length === 0 && !busy && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -582,9 +705,10 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
             className="text-center py-6"
           >
             <p className="text-sm text-white/30 mb-1">围炉已点燃</p>
-            <p className="text-xs text-white/20 mb-6 leading-relaxed">
+            <p className="text-xs text-white/20 mb-4 leading-relaxed">
               {guestNames} 已入席，等你先开口
             </p>
+            <PersonaDisclaimer className="max-w-sm mx-auto mb-6 text-left" />
             <div className="flex flex-col gap-2 max-w-sm mx-auto">
               {STARTER_PROMPTS.map((prompt, i) => (
                 <motion.button
@@ -657,9 +781,7 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {aiMode === 'template' && (
-                <span className="text-[10px] text-white/20 px-2 py-0.5 rounded-full bg-white/[0.04]">离线</span>
-              )}
+              {aiOnline && <AiStatusChip enabled={aiOnline.enabled} model={aiOnline.model} />}
               <button
                 type="button"
                 onClick={() => {
@@ -866,7 +988,15 @@ function WrapScreen({
     <div className="min-h-screen rt-scene-bg px-5 py-12 max-w-md mx-auto pb-16">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <p className="text-[10px] uppercase tracking-[0.2em] text-amber-200/35 mb-2">围炉收束</p>
-        <h2 className="text-xl font-light text-white/85 mb-6">{userName}，聊完了。</h2>
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <h2 className="text-xl font-light text-white/85">{userName}，聊完了。</h2>
+          {summary.mode === 'template' && (
+            <span className="text-[9px] text-white/28 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08]">
+              收束 · 离线模板
+            </span>
+          )}
+        </div>
+        <PersonaDisclaimer className="mb-6" />
 
         <div className="space-y-3 mb-8">
           {[
@@ -981,7 +1111,10 @@ export function RoundtableMode() {
   ) => {
     const date = new Date().toISOString().split('T')[0];
     const guests = personas.map(p => `${p.name}`).join('、');
-    const body = msgs.map(m => `**${m.name}：** ${m.text}`).join('\n\n');
+    const body = msgs.map(m => {
+      const tag = m.replyMode === 'ai' ? ' *(AI · 风格演绎)*' : m.replyMode === 'template' ? ' *(离线模板)*' : '';
+      return `**${m.name}：** ${m.text}${tag}`;
+    }).join('\n\n');
     const debriefBlock = db
       ? `## 复盘（心理安全 1–5）
 - 敢表达不同意见：${db.speak}
@@ -1027,6 +1160,8 @@ ${debriefBlock}
 ${commitBlock}
 
 ---
+> ${PERSONA_DISCLAIMER}
+
 > 由 ${brand.productName} 圆桌对谈生成 · ${date}`;
   };
 

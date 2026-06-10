@@ -130,7 +130,7 @@ app.post('/api/ai/persona/reply', async (req, res) => {
     return res.status(400).json({ error: '缺少人物或主题' });
   }
   try {
-    const reply = await personaReply(
+    const { reply, mode } = await personaReply(
       personaId.trim(),
       topic.trim(),
       Array.isArray(history) ? history : [],
@@ -138,7 +138,7 @@ app.post('/api/ai/persona/reply', async (req, res) => {
       userName?.trim() || '我',
       typeof lastSpeaker === 'string' ? lastSpeaker : ''
     );
-    res.json({ reply, mode: getStatus().mode });
+    res.json({ reply, mode });
   } catch (err) {
     res.status(500).json({ error: err.message || '生成失败' });
   }
@@ -150,7 +150,7 @@ app.post('/api/ai/persona/dispatch', async (req, res) => {
     return res.status(400).json({ error: '缺少嘉宾或主题' });
   }
   try {
-    const order = await pickPersonaResponders(
+    const { order, mode, note } = await pickPersonaResponders(
       personaIds.map(String),
       topic.trim(),
       Array.isArray(history) ? history : [],
@@ -158,7 +158,7 @@ app.post('/api/ai/persona/dispatch', async (req, res) => {
       userName?.trim() || '我',
       targetPersonaId?.trim() || ''
     );
-    res.json({ order, mode: getStatus().mode });
+    res.json({ order, mode, note: note || '' });
   } catch (err) {
     res.status(500).json({ error: err.message || '调度失败' });
   }
