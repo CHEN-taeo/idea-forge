@@ -7,7 +7,7 @@ import { fetchSmartAction } from '../lib/aiClient';
 interface CommitmentPhaseProps {
   gameState: GameState;
   currentPlayer: Player;
-  onCreateCommitment: (action: string, ideaId: string, onSuccess: (c: Commitment | { error?: string }) => void) => void;
+  onCreateCommitment: (action: string, ideaId: string, dueDays: number, onSuccess: (c: Commitment | { error?: string }) => void) => void;
   onNextPhase: () => void;
 }
 

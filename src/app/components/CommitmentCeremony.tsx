@@ -1,13 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Idea, Player, Commitment } from '../types/game';
 import { cn } from './ui/utils';
+import { DUE_DAY_OPTIONS, formatSmartAction, validateSmartCommitment } from '../lib/smartCommitment';
 
 interface CommitmentCeremonyProps {
   ideas: Idea[];
   players: Record<string, Player>;
   currentPlayer: Player;
   serverCommitments?: Commitment[];
-  onCreateCommitment: (action: string, ideaId: string, onSuccess: (commitment: Commitment) => void) => void;
+  onCreateCommitment: (action: string, ideaId: string, dueDays: number, onSuccess: (commitment: Commitment) => void) => void;
   onAiSuggestAction?: (ideaText: string, onResult: (action: string, mode: string) => void, onError: (msg: string) => void) => void;
 }
 
@@ -20,7 +21,8 @@ function getTopIdeas(ideas: Idea[], n = 5): Idea[] {
 
 export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommitments = [], onCreateCommitment, onAiSuggestAction }: CommitmentCeremonyProps) {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
-  const [actionText, setActionText] = useState('');
+  const [smartWhat, setSmartWhat] = useState('');
+  const [dueDays, setDueDays] = useState<number>(14);
   const [submitting, setSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiModeHint, setAiModeHint] = useState<string | null>(null);
@@ -54,28 +56,31 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommit
     if (myCommitted) return;
     if (claimedIdeaIds.has(ideaId)) return;
     setSelectedIdeaId(prev => prev === ideaId ? null : ideaId);
-    setActionText('');
+    setSmartWhat('');
   }, [myCommitted, claimedIdeaIds]);
 
+  const previewAction = smartWhat.trim()
+    ? formatSmartAction(currentPlayer.name, smartWhat, dueDays)
+    : '';
+
   const handleSubmit = useCallback(() => {
-    const action = actionText.trim();
-    if (!action || action.length < 4) {
+    const err = validateSmartCommitment(smartWhat, dueDays);
+    if (err) {
       textareaRef.current?.focus();
       return;
     }
     if (!selectedIdeaId) return;
 
     setSubmitting(true);
+    const action = formatSmartAction(currentPlayer.name, smartWhat, dueDays);
 
-    onCreateCommitment(action, selectedIdeaId, (result) => {
+    onCreateCommitment(action, selectedIdeaId, dueDays, (result) => {
       setSubmitting(false);
-      if (result?.error) {
-        return;
-      }
+      if (result?.error) return;
       setSelectedIdeaId(null);
-      setActionText('');
+      setSmartWhat('');
     });
-  }, [actionText, selectedIdeaId, onCreateCommitment]);
+  }, [smartWhat, dueDays, selectedIdeaId, currentPlayer.name, onCreateCommitment]);
 
   const selectedIdea = selectedIdeaId ? ideas.find(i => i.id === selectedIdeaId) : null;
 
@@ -87,7 +92,7 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommit
       selectedIdea.text,
       (action, mode) => {
         setAiLoading(false);
-        setActionText(action);
+        setSmartWhat(action.replace(/^[^：]+将在 \d+ 天内：/, '') || action);
         setAiModeHint(mode === 'ai' ? 'AI 建议（可修改）' : '离线提示（可修改）');
         textareaRef.current?.focus();
       },
@@ -170,13 +175,35 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommit
             </label>
             <textarea
               ref={textareaRef}
-              value={actionText}
-              onChange={e => setActionText(e.target.value)}
-              placeholder={`具体、可执行的一件事……\n例如：下周五前联系3位潜在用户做访谈`}
+              value={smartWhat}
+              onChange={e => setSmartWhat(e.target.value)}
+              placeholder="具体、可执行的一件事（至少 8 字）&#10;例如：联系 3 位潜在用户做访谈并整理反馈"
               maxLength={200}
               rows={3}
               className="w-full bg-white/[0.03] border border-amber-300/14 rounded-lg text-white/85 text-[13px] leading-relaxed p-2.5 resize-none min-h-[64px] outline-none transition-colors duration-200 placeholder:text-white/20 focus:border-amber-300/30 focus:shadow-[0_0_0_2px_rgba(251,191,36,.06)] mb-2 font-[inherit]"
             />
+            <div className="flex flex-wrap gap-2 mb-2.5">
+              {DUE_DAY_OPTIONS.map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDueDays(d)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] border transition-colors',
+                    dueDays === d
+                      ? 'border-amber-300/40 bg-amber-300/12 text-amber-200/90'
+                      : 'border-white/10 text-white/35 hover:border-white/20'
+                  )}
+                >
+                  {d} 天
+                </button>
+              ))}
+            </div>
+            {previewAction && (
+              <p className="text-[11px] text-white/30 mb-2 leading-relaxed border-l-2 border-amber-300/20 pl-2">
+                预览：{previewAction}
+              </p>
+            )}
             {onAiSuggestAction && (
               <div className="flex items-center gap-2 mb-2.5">
                 <button
@@ -194,7 +221,7 @@ export function CommitmentCeremony({ ideas, players, currentPlayer, serverCommit
             )}
             <div className="flex items-center justify-between gap-2.5">
               <span className="text-[11px] text-white/25 whitespace-nowrap">
-                📅 <span className="text-amber-300/50 font-medium">14天</span>后系统会来提醒你
+                📅 <span className="text-amber-300/50 font-medium">{dueDays}天</span>后系统会来提醒你
               </span>
               <button
                 onClick={handleSubmit}

@@ -1,0 +1,243 @@
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.problem-lead {
+  text-align: left;
+  margin-bottom: 28rpx;
+}
+
+.timer {
+  font-family: ui-monospace, monospace;
+  font-size: 32rpx;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.timer--urgent {
+  color: #c44;
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+}
+
+.role-banner {
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.role-banner__label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-bottom: 6rpx;
+}
+
+.role-banner__name {
+  font-size: 32rpx;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.card--center { text-align: center; }
+.mt { margin-top: 24rpx; }
+.mb { margin-bottom: 16rpx; }
+.pad-lg { padding: 48rpx; }
+.center-dot { margin: 0 auto 16rpx; }
+.display--sm { font-size: 32rpx; margin-bottom: 12rpx; }
+
+.player-row {
+  font-size: 26rpx;
+  color: var(--muted);
+  padding: 8rpx 0;
+}
+
+.idea-text {
+  font-size: 28rpx;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  margin-bottom: 16rpx;
+}
+
+.inline-btn { display: inline-block; margin: 6rpx 8rpx 6rpx 0; }
+
+.idea-pick {
+  border: 1rpx solid var(--border);
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  color: var(--ink-soft);
+}
+
+.idea-pick--on {
+  border-color: var(--accent);
+  background: rgba(196, 103, 58, 0.08);
+}
+
+.idea-pick__votes {
+  display: block;
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-bottom: 8rpx;
+}
+
+.tab-row {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: var(--muted);
+  border: 1rpx solid var(--border);
+}
+
+.tab--on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(196, 103, 58, 0.08);
+}
+
+.field-textarea--sm { min-height: 120rpx; }
+
+.muted {
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.btn-row {
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn--danger {
+  background: rgba(180, 60, 60, 0.12);
+  color: #a33;
+  border: 1rpx solid rgba(180, 60, 60, 0.25);
+}
+
+.check-row {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  margin-bottom: 12rpx;
+}
+
+.ceremony-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+
+.ceremony-title {
+  font-size: 28rpx;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+
+.ceremony-sub {
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.commit-scroll {
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+.commit-chip {
+  display: inline-block;
+  width: 280rpx;
+  vertical-align: top;
+  margin-right: 16rpx;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid var(--border);
+  white-space: normal;
+}
+
+.commit-chip--on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2rpx rgba(196, 103, 58, 0.15);
+}
+
+.commit-chip--claimed {
+  opacity: 0.45;
+}
+
+.commit-chip__votes {
+  display: block;
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-bottom: 8rpx;
+}
+
+.commit-chip__text {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.due-row {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.due-chip {
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  border: 1rpx solid var(--border);
+  color: var(--muted);
+}
+
+.due-chip--on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(196, 103, 58, 0.08);
+}
+
+.preview-box {
+  font-size: 24rpx;
+  color: var(--muted);
+  border-left: 4rpx solid var(--accent);
+  padding-left: 16rpx;
+  margin-bottom: 16rpx;
+  line-height: 1.5;
+}
+
+.commit-row {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+
+.commit-row__who {
+  display: block;
+  font-size: 24rpx;
+  color: var(--accent);
+  margin-bottom: 6rpx;
+}
+
+.commit-row__what {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.leave-btn { margin-top: 32rpx; }

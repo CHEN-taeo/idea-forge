@@ -245,7 +245,7 @@ export default function App() {
         <CommitmentPhase
           gameState={gameState}
           currentPlayer={currentPlayer}
-          onCreateCommitment={(action, ideaId, onSuccess) => createCommitment(action, ideaId, 14, onSuccess)}
+          onCreateCommitment={(action, ideaId, dueDays, onSuccess) => createCommitment(action, ideaId, dueDays, onSuccess)}
           onNextPhase={handleNextPhase}
         />
       )}

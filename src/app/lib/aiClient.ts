@@ -5,6 +5,7 @@ function apiUrl(path: string) {
 }
 
 export type AiMode = 'ai' | 'template';
+export type DispatchMode = 'ai' | 'template' | 'manual';
 
 export async function fetchAiStatus(): Promise<{ enabled: boolean; mode: AiMode; model?: string }> {
   try {
@@ -78,7 +79,7 @@ export async function fetchPersonaDispatch(
   userMessage: string,
   userName?: string,
   targetPersonaId?: string
-): Promise<{ order: string[]; mode: AiMode }> {
+): Promise<{ order: string[]; mode: DispatchMode; note: string }> {
   const res = await fetch(apiUrl('/api/ai/persona/dispatch'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

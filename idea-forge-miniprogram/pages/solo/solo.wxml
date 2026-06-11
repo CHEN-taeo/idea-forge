@@ -1,0 +1,72 @@
+<view class="page">
+  <block wx:if="{{phase === 'setup'}}">
+    <view class="eyebrow">独思</view>
+    <view class="display" style="font-size:40rpx;margin:12rpx 0 8rpx;">一个人，15 分钟想明白</view>
+    <view class="lead" style="margin-bottom:32rpx;">{{brand.slogan}}</view>
+    <view class="card card--flat">
+      <view class="field">
+        <text class="field-label">你的名字</text>
+        <input class="field-input" placeholder="例如：小陈" value="{{name}}" bindinput="onNameInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">你在想什么？</text>
+        <textarea class="field-textarea" placeholder="例如：该不该辞职创业？" value="{{problem}}" bindinput="onProblemInput" />
+      </view>
+    </view>
+    <view class="btn btn--primary" bindtap="startSolo">开始{{brand.soloName}} →</view>
+  </block>
+
+  <block wx:elif="{{phase === 'angles'}}">
+    <view class="eyebrow">第 1 步 · 换角度</view>
+    <view class="display" style="font-size:36rpx;margin:12rpx 0;">{{anglesTitle}}</view>
+    <view class="lead" style="margin-bottom:24rpx;">{{problem}}</view>
+    <view wx:if="{{anglesLoading}}" class="card card--flat lead">正在生成思考角度…</view>
+    <view wx:for="{{angles}}" wx:key="*this" class="card card--flat" style="padding:28rpx;font-size:28rpx;color:var(--ink-soft);">{{item}}</view>
+    <view class="btn btn--primary {{anglesLoading || !angles.length ? 'btn--disabled' : ''}}" bindtap="toBrainstorm">开始写想法 →</view>
+  </block>
+
+  <block wx:elif="{{phase === 'brainstorm'}}">
+    <view class="eyebrow">第 2 步 · 写想法</view>
+    <view class="display" style="font-size:36rpx;margin:12rpx 0;">先把一切写出来</view>
+    <view class="lead" style="margin-bottom:24rpx;">至少 3 条 · 已有 {{ideas.length}} 条</view>
+    <view class="card card--flat">
+      <textarea class="field-textarea" placeholder="写一条想法…" value="{{ideaText}}" bindinput="onIdeaInput" />
+      <view class="btn btn--secondary btn--sm {{canAddIdea ? '' : 'btn--disabled'}}" bindtap="addIdea">添加</view>
+    </view>
+    <view wx:for="{{ideas}}" wx:key="id" class="idea-row">{{index + 1}}. {{item.text}}</view>
+    <view wx:if="{{ideas.length >= 3}}" class="btn btn--primary" bindtap="toCurate">筛选最好的 →</view>
+  </block>
+
+  <block wx:elif="{{phase === 'curate'}}">
+    <view class="eyebrow">第 3 步 · 筛选</view>
+    <view class="display" style="font-size:36rpx;margin:12rpx 0;">留下 1–3 条</view>
+    <view class="lead" style="margin-bottom:24rpx;">点击标记你想深入的那几条</view>
+    <view wx:for="{{ideas}}" wx:key="id" class="idea-row {{item.selected ? 'idea-row--on' : ''}}" data-id="{{item.id}}" bindtap="toggleVote">
+      {{index + 1}}. {{item.text}} {{item.selected ? '★' : ''}}
+    </view>
+    <view class="btn btn--primary" bindtap="toCommit">认领行动 →</view>
+  </block>
+
+  <block wx:elif="{{phase === 'commit'}}">
+    <view class="eyebrow">第 4 步 · 承诺</view>
+    <view wx:if="{{actionLoading}}" class="card card--flat lead">生成 SMART 行动…</view>
+    <view wx:elif="{{commitment}}" class="card">
+      <view class="field-label">选中的构想</view>
+      <view style="font-size:28rpx;color:var(--ink-soft);margin-bottom:28rpx;">{{commitment.ideaText}}</view>
+      <view class="field-label">建议行动</view>
+      <view style="font-size:28rpx;color:var(--accent);line-height:1.7;">{{commitment.action}}</view>
+      <view class="section-gap"></view>
+      <view class="btn btn--primary" bindtap="finish">我领走这件事 ☯</view>
+    </view>
+  </block>
+
+  <block wx:elif="{{phase === 'finish'}}">
+    <view class="card" style="text-align:center;padding:48rpx 36rpx;">
+      <view style="font-size:56rpx;margin-bottom:16rpx;">☯</view>
+      <view class="display" style="font-size:36rpx;">离场有交代</view>
+      <view class="lead" style="margin:16rpx 0 32rpx;">导出报告备查</view>
+      <view class="btn btn--primary" bindtap="copyReport">复制报告</view>
+      <view class="btn btn--text" bindtap="backHome">返回首页</view>
+    </view>
+  </block>
+</view>

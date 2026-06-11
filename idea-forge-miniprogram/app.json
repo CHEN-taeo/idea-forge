@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/create/create",
+    "pages/solo/solo",
+    "pages/roundtable/roundtable",
+    "pages/join/join",
+    "pages/room/room"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#faf9f5",
+    "navigationBarTitleText": "构想熔炉",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#faf9f5",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
