@@ -29,6 +29,12 @@ const ROLE_LABELS = {
   Wildcard: '野路子',
 };
 
+const GUIDED_QUESTION_SETS = {
+  product: { label: '产品决策', questions: ['我们的用户最痛恨产品的哪一点？', '如果我们只能保留一个功能，是哪个？', '竞争对手绝对不会做的事，我们应该做吗？'] },
+  strategy: { label: '战略规划', questions: ['5年后，我们希望被记住的是什么？', '什么是现在最大的风险？', '如果资源减半，我们会首先砍掉什么？'] },
+  retrospective: { label: '团队回顾', questions: ['上个季度我们最骄傲的是什么？', '如果重来，我们会改变什么？', '团队的超能力是什么？盲点是什么？'] },
+};
+
 const PRESETS = [
   { label: '创业三角', desc: '颠覆 × 产品 × 算力', ids: ['musk', 'jobs', 'huang'] },
   { label: '思辨之夜', desc: '诘问 × 批判 × 清醒', ids: ['socrates', 'marx', 'luxun'] },
@@ -48,6 +54,7 @@ function getPersona(id) {
 module.exports = {
   INSPIRATION_CARDS,
   ROLE_LABELS,
+  GUIDED_QUESTION_SETS,
   PRESETS,
   STARTER_PROMPTS,
   getPersona,

@@ -56,6 +56,34 @@ export const INSPIRATION_CARDS = [
   '如果用户能 remix 一切会怎样？'
 ];
 
+/** Template question packs — 《游戏风暴》风格引导问题 */
+export const GUIDED_QUESTION_SETS = {
+  product: {
+    label: '产品决策',
+    questions: [
+      '我们的用户最痛恨产品的哪一点？',
+      '如果我们只能保留一个功能，是哪个？',
+      '竞争对手绝对不会做的事，我们应该做吗？'
+    ]
+  },
+  strategy: {
+    label: '战略规划',
+    questions: [
+      '5年后，我们希望被记住的是什么？',
+      '什么是现在最大的风险？',
+      '如果资源减半，我们会首先砍掉什么？'
+    ]
+  },
+  retrospective: {
+    label: '团队回顾',
+    questions: [
+      '上个季度我们最骄傲的是什么？',
+      '如果重来，我们会改变什么？',
+      '团队的超能力是什么？盲点是什么？'
+    ]
+  }
+} as const;
+
 export const GOLD_CARDS = [
   '🎯 加倍：下一条提交的想法计双倍分',
   '💡 跟风：立刻改造他人想法，+3 分',

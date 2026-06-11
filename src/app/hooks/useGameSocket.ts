@@ -318,7 +318,7 @@ export function useGameSocket(): UseGameSocketReturn {
       setLastError('未连接到服务器');
       return;
     }
-    socket.emit('create_commitment', { action, ideaId, dueDays: dueDays || 14 }, (response: any) => {
+    socket.emit('create_commitment', { action, ideaId, dueDays: dueDays || 14, smartWhat: action }, (response: any) => {
       if (response?.error) {
         setLastError(response.error);
         onSuccess({ error: response.error });

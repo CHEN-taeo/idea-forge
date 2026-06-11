@@ -65,7 +65,29 @@ function initSchema() {
       game_state_json TEXT NOT NULL,
       updated_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      room_code TEXT,
+      session_id TEXT,
+      player_name TEXT,
+      meta_json TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics_events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_analytics_room ON analytics_events(room_code);
   `);
+
+  // Migration: echo open tracking on commitments
+  const cols = db.prepare(`PRAGMA table_info(commitments)`).all().map(c => c.name);
+  if (!cols.includes('echo_opened_at')) {
+    db.exec(`ALTER TABLE commitments ADD COLUMN echo_opened_at TEXT`);
+  }
+  if (!cols.includes('template')) {
+    db.exec(`ALTER TABLE commitments ADD COLUMN template TEXT`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -172,18 +194,18 @@ export function getSession(roomCode) {
 // ---------------------------------------------------------------------------
 // Commitment persistence
 // ---------------------------------------------------------------------------
-export function createCommitment({ playerName, action, ideaId, ideaText, sessionId, dueDays = 14 }) {
+export function createCommitment({ playerName, action, ideaId, ideaText, sessionId, dueDays = 14, template = null }) {
   const d = getDb();
   const id = `tok_${Date.now()}_${randomBytes(4).toString('hex')}`;
   const echoToken = randomBytes(12).toString('hex');
   const dueDate = new Date(Date.now() + dueDays * 86400000).toISOString().split('T')[0];
 
   const stmt = d.prepare(`
-    INSERT INTO commitments (id, session_id, player_name, action, idea_id, idea_text, echo_token, due_days, due_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO commitments (id, session_id, player_name, action, idea_id, idea_text, echo_token, due_days, due_date, template)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  stmt.run(id, sessionId, playerName, action, ideaId, ideaText, echoToken, dueDays, dueDate);
+  stmt.run(id, sessionId, playerName, action, ideaId, ideaText, echoToken, dueDays, dueDate, template);
 
   console.log(`[DB] Commitment created: ${id} by ${playerName} (due: ${dueDate})`);
   return { id, echoToken, dueDate, echoUrl: `/echo/${echoToken}` };
@@ -208,4 +230,72 @@ export function getDueCommitments() {
 export function getAllSessions(limit = 20) {
   const d = getDb();
   return d.prepare('SELECT * FROM sessions ORDER BY created_at DESC LIMIT ?').all(limit);
+}
+
+// ---------------------------------------------------------------------------
+// Analytics & metrics (P0 hypothesis validation)
+// ---------------------------------------------------------------------------
+export function logEvent(eventType, { roomCode = null, sessionId = null, playerName = null, meta = null } = {}) {
+  const d = getDb();
+  d.prepare(`
+    INSERT INTO analytics_events (event_type, room_code, session_id, player_name, meta_json)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(eventType, roomCode, sessionId, playerName, meta ? JSON.stringify(meta) : null);
+}
+
+export function recordEchoOpen(token) {
+  const d = getDb();
+  const row = d.prepare('SELECT echo_opened_at, session_id, player_name FROM commitments WHERE echo_token = ?').get(token);
+  if (!row) return false;
+  if (!row.echo_opened_at) {
+    d.prepare(`UPDATE commitments SET echo_opened_at = datetime('now') WHERE echo_token = ?`).run(token);
+    logEvent('echo_opened', {
+      sessionId: row.session_id || null,
+      playerName: row.player_name || null,
+      meta: { echoToken: token }
+    });
+  }
+  return true;
+}
+
+export function getMetrics() {
+  const d = getDb();
+
+  const sessionsStarted = d.prepare(`SELECT COUNT(*) AS n FROM analytics_events WHERE event_type = 'session_started'`).get().n;
+  const commitmentsCreated = d.prepare(`SELECT COUNT(*) AS n FROM analytics_events WHERE event_type = 'commitment_created'`).get().n;
+  const echoOpens = d.prepare(`SELECT COUNT(*) AS n FROM commitments WHERE echo_opened_at IS NOT NULL`).get().n;
+  const totalCommitments = d.prepare(`SELECT COUNT(*) AS n FROM commitments`).get().n;
+
+  const byTemplate = d.prepare(`
+    SELECT COALESCE(json_extract(meta_json, '$.template'), 'unknown') AS template, COUNT(*) AS n
+    FROM analytics_events WHERE event_type = 'session_started'
+    GROUP BY template
+  `).all();
+
+  const commitmentByTemplate = d.prepare(`
+    SELECT COALESCE(template, 'unknown') AS template, COUNT(*) AS n
+    FROM commitments GROUP BY template
+  `).all();
+
+  const recentEvents = d.prepare(`
+    SELECT event_type, room_code, player_name, meta_json, created_at
+    FROM analytics_events ORDER BY id DESC LIMIT 30
+  `).all();
+
+  const playersAtCommitment = d.prepare(`
+    SELECT COALESCE(SUM(CAST(json_extract(meta_json, '$.playerCount') AS INTEGER)), 0) AS n
+    FROM analytics_events WHERE event_type = 'phase_entered' AND json_extract(meta_json, '$.phase') = 'commitment'
+  `).get().n;
+
+  return {
+    sessionsStarted,
+    commitmentsCreated,
+    totalCommitments,
+    echoOpens,
+    commitmentRate: playersAtCommitment > 0 ? commitmentsCreated / playersAtCommitment : null,
+    echoOpenRate: totalCommitments > 0 ? echoOpens / totalCommitments : null,
+    sessionsByTemplate: byTemplate,
+    commitmentsByTemplate: commitmentByTemplate,
+    recentEvents
+  };
 }

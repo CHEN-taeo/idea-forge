@@ -333,17 +333,24 @@ class GameSocket {
     }
   }
 
-  /** Promise wrapper with ack timeout */
+  /** Promise wrapper with ack timeout; also listens for `${event}:ack` fallback */
   emitAsync(event, data, timeoutMs = 12000) {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('服务器响应超时'));
-      }, timeoutMs);
-      this.emit(event, data, (res) => {
+      let settled = false;
+      const ackEvent = `${event}:ack`;
+      const finish = (res, timedOut) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timer);
-        if (res && res.error) reject(new Error(res.error));
+        this.off(ackEvent, onFallback);
+        if (timedOut) reject(new Error('服务器响应超时'));
+        else if (res && res.error) reject(new Error(res.error));
         else resolve(res);
-      });
+      };
+      const timer = setTimeout(() => finish(null, true), timeoutMs);
+      const onFallback = (res) => finish(res, false);
+      this.on(ackEvent, onFallback);
+      this.emit(event, data, (res) => finish(res, false));
     });
   }
 

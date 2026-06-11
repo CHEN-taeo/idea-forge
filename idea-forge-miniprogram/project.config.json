@@ -30,7 +30,7 @@
     "packNpmRelationList": []
   },
   "compileType": "miniprogram",
-  "libVersion": "3.5.5",
+  "libVersion": "3.16.1",
   "appid": "wx37b3449199acea3b",
   "projectname": "idea-forge",
   "condition": {},

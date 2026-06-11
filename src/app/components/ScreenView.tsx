@@ -52,8 +52,9 @@ export function ScreenView({ gameState, currentPlayer, isHost }: ScreenViewProps
           {/* Timer — large */}
           {phase !== 'lobby' && phase !== 'finished' && phase !== 'commitment' && (
             <PhaseTimer
+              deadline={gameState.timerEnd}
               duration={phase === 'r1_submit' ? 300 : phase === 'r2_adapt' ? 480 : 600}
-              className="scale-150"
+              size="screen"
             />
           )}
           {/* Player count */}

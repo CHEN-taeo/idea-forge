@@ -1,5 +1,5 @@
 const brand = require('../../utils/brand');
-const { fetchHealth, fetchAiStatus } = require('../../utils/api');
+const { fetchHealth, fetchAiStatus, SERVER_URL } = require('../../utils/api');
 const { loadSession } = require('../../utils/storage');
 
 Page({
@@ -8,6 +8,8 @@ Page({
     serverOk: false,
     aiEnabled: false,
     checking: true,
+    serverHint: '',
+    serverUrl: SERVER_URL,
   },
 
   onLoad(options) {
@@ -23,14 +25,24 @@ Page({
   },
 
   checkServer() {
-    this.setData({ checking: true });
+    this.setData({ checking: true, serverHint: '' });
     fetchHealth()
       .then(() => fetchAiStatus())
       .then((s) => {
-        this.setData({ serverOk: true, aiEnabled: !!s.enabled, checking: false });
+        this.setData({
+          serverOk: true,
+          aiEnabled: !!s.enabled,
+          checking: false,
+          serverHint: '',
+        });
       })
-      .catch(() => {
-        this.setData({ serverOk: false, aiEnabled: false, checking: false });
+      .catch((err) => {
+        this.setData({
+          serverOk: false,
+          aiEnabled: false,
+          checking: false,
+          serverHint: (err && err.message) || '后端未启动',
+        });
       });
   },
 
@@ -53,7 +65,11 @@ Page({
 
   tapCreate() {
     if (!this.data.serverOk) {
-      wx.showToast({ title: '请先启动后端 npm run server', icon: 'none' });
+      wx.showModal({
+        title: '后端未连接',
+        content: `在项目根目录运行：\nnpm run server\n\n地址：${SERVER_URL}`,
+        showCancel: false,
+      });
       return;
     }
     wx.navigateTo({ url: '/pages/create/create' });
@@ -61,7 +77,11 @@ Page({
 
   tapJoin() {
     if (!this.data.serverOk) {
-      wx.showToast({ title: '请先启动后端 npm run server', icon: 'none' });
+      wx.showModal({
+        title: '后端未连接',
+        content: `在项目根目录运行：\nnpm run server\n\n地址：${SERVER_URL}`,
+        showCancel: false,
+      });
       return;
     }
     wx.navigateTo({ url: '/pages/join/join' });

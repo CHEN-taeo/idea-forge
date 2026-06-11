@@ -4,12 +4,14 @@
     <view class="hero-title display">{{brand.productName}}</view>
     <view class="hero-sub">{{brand.hostName}} · {{brand.subtitle}}</view>
     <view class="lead" style="margin-top:20rpx;padding:0 16rpx;">{{brand.slogan}}</view>
-    <view class="status-pill">
+    <view class="status-pill" bindtap="checkServer">
       <view class="dot {{checking ? 'dot--wait' : (serverOk ? 'dot--ok' : 'dot--bad')}}"></view>
       <text wx:if="{{checking}}">检测连接…</text>
       <text wx:elif="{{serverOk}}">{{aiEnabled ? 'AI 教练在线' : '后端已连接 · 离线模板可用'}}</text>
-      <text wx:else>未连接后端 · 独思/群英会仍可用模板</text>
+      <text wx:else>未连接 · 点此重试</text>
     </view>
+    <view wx:if="{{serverHint && !checking}}" class="lead" style="margin-top:16rpx;font-size:22rpx;color:#9b2226;">{{serverHint}}</view>
+    <view wx:if="{{!serverOk && !checking}}" class="lead" style="margin-top:8rpx;font-size:20rpx;">根目录运行 npm run server → {{serverUrl}}</view>
   </view>
 
   <view class="mode-list">

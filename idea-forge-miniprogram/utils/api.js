@@ -7,23 +7,32 @@ function request(path, options = {}) {
       method: options.method || 'GET',
       data: options.data,
       header: { 'Content-Type': 'application/json', ...(options.header || {}) },
-      timeout: 12000,
+      timeout: options.timeout != null ? options.timeout : 12000,
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(new Error((res.data && res.data.error) || `HTTP ${res.statusCode}`));
       },
-      fail(err) { reject(err); },
+      fail(err) {
+        const msg = (err && err.errMsg) || '';
+        if (msg.indexOf('timeout') >= 0) {
+          reject(new Error(`连接超时 · 请先运行 npm run server（${SERVER_URL}）`));
+        } else if (msg.indexOf('fail') >= 0) {
+          reject(new Error(`无法连接后端 · ${SERVER_URL}`));
+        } else {
+          reject(new Error(msg || '网络错误'));
+        }
+      },
     });
   });
 }
 
-/** Server reachable (AI optional) */
+/** Server reachable (AI optional). Fast fail — one request, 4s. */
 function fetchHealth() {
-  return request('/api/ai/status').catch(() => request('/api/sessions').then(() => ({})));
+  return request('/api/ai/status', { timeout: 4000 });
 }
 
 function fetchAiStatus() {
-  return request('/api/ai/status').catch(() => ({ enabled: false, mode: 'template' }));
+  return request('/api/ai/status', { timeout: 4000 }).catch(() => ({ enabled: false, mode: 'template' }));
 }
 
 function fetchSoloAngles(problem) {
@@ -35,7 +44,7 @@ function fetchSmartAction(ideaText, problem, playerName) {
 }
 
 function fetchSoloChallenge(ideaText, problem) {
-  return request('/api/ai/solo/challenge', { method: 'POST', data: { ideaText, problem } });
+  return request('/api/ai/solo/challenge', { method: 'POST', data: { problem, ideaText } });
 }
 
 function fetchPersonaReply(personaId, topic, history, userMessage, userName, lastSpeaker) {
@@ -60,6 +69,7 @@ function fetchRoundtableSummary(topic, history, personaIds) {
 }
 
 module.exports = {
+  SERVER_URL,
   fetchHealth,
   fetchAiStatus,
   fetchSoloAngles,

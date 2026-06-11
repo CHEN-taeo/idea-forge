@@ -48,6 +48,7 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 ### AI surface (`ai.js`)
 - Functions: `generatePrompts`, `expandIdea`, `analyzeRound`, `generateSmartAction`, `soloChallengeIdea`, `getStatus`
 - REST: `/api/ai/status`, `/api/ai/solo/angles`, `/api/ai/smart-action`, `/api/ai/solo/challenge`
+- REST: `GET /api/metrics` — P0 假设验证（承诺转化率、echo 打开率、模板分桶）
 - REST (围炉群英会): `/api/ai/persona/dispatch`, `/api/ai/persona/reply`, `/api/ai/persona/summarize` — see **`docs/构想熔炉-围炉群英会.md`**
 - Socket: `ai_generate_prompts`, `ai_expand`, `ai_round_summary`
 - **No API key → hardcoded Chinese template fallback.** Preserve this fallback path in any AI change.

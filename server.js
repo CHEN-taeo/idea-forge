@@ -4,8 +4,9 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { exec } from 'child_process';
-import { getDb, saveSession, getSession, createCommitment, getCommitmentByToken, getCommitmentsBySession, getAllSessions, saveActiveRoom, loadActiveRoom, loadAllActiveRooms, deleteActiveRoom } from './db.js';
+import { getDb, saveSession, getSession, createCommitment, getCommitmentByToken, getCommitmentsBySession, getAllSessions, saveActiveRoom, loadActiveRoom, loadAllActiveRooms, deleteActiveRoom, logEvent, recordEchoOpen, getMetrics } from './db.js';
 import { generatePrompts, expandIdea, analyzeRound, generateSmartAction, soloChallengeIdea, personaReply, pickPersonaResponders, summarizeRoundtable, getStatus } from './ai.js';
+import { validateSmartCommitment, formatSmartAction } from './smartCommitment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,6 +36,8 @@ app.get('/echo/:token', (req, res) => {
       <style>body{font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;background:#1a130c;color:#fff5e6;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center} h1{font-size:1.5rem;font-weight:300;color:rgba(255,240,215,.6)} p{color:rgba(255,240,215,.3)}</style>
       </head><body><div><h1>⏳ 此链接已失效</h1><p>承诺记录可能已被删除或链接过期。</p></div></body></html>`);
   }
+
+  recordEchoOpen(req.params.token);
 
   res.send(`
     <!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>承诺回声 · Idea Forge</title>
@@ -74,6 +77,11 @@ app.get('/api/session/:roomCode', (req, res) => {
 app.get('/api/sessions', (req, res) => {
   const sessions = getAllSessions();
   res.json(sessions);
+});
+
+// API: P0 metrics — commitment conversion, echo opens, template breakdown
+app.get('/api/metrics', (req, res) => {
+  res.json(getMetrics());
 });
 
 // API: Get commitments for a session
@@ -232,6 +240,23 @@ function generatePlayerId() {
   return `p_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
+/** WeChat mini program client may not pass a callback as final arg (ack id as number). */
+function parseSocketPayload(...args) {
+  const last = args[args.length - 1];
+  if (typeof last === 'function') {
+    return { data: args.length >= 2 ? args[0] : {}, ack: last };
+  }
+  return { data: args[0] && typeof args[0] === 'object' ? args[0] : {}, ack: null };
+}
+
+function socketReply(socket, event, ack, payload) {
+  if (typeof ack === 'function') {
+    ack(payload);
+    return;
+  }
+  socket.emit(`${event}:ack`, payload);
+}
+
 function generateIdeaId() {
   return `idea_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
@@ -323,10 +348,11 @@ function escapeHtml(str) {
 io.on('connection', (socket) => {
   console.log(`[Socket] Connected: ${socket.id}`);
 
-  socket.on('create_room', ({ playerName, problemStatement, template }, ack) => {
+  socket.on('create_room', (...raw) => {
+    const { data: { playerName, problemStatement, template }, ack } = parseSocketPayload(...raw);
     try {
-      if (!playerName || !playerName.trim()) return ack?.({ error: '请输入你的名字' });
-      if (!problemStatement || !problemStatement.trim()) return ack?.({ error: '请填写讨论问题' });
+      if (!playerName || !playerName.trim()) return socketReply(socket, 'create_room', ack, { error: '请输入你的名字' });
+      if (!problemStatement || !problemStatement.trim()) return socketReply(socket, 'create_room', ack, { error: '请填写讨论问题' });
 
       const sessionTemplate = template === 'quick' ? 'quick' : 'full';
       const roomCode = generateRoomCode();
@@ -350,21 +376,22 @@ io.on('connection', (socket) => {
       rooms.set(roomCode, gameState);
       persistRoom(roomCode, gameState);
       console.log(`[Room] Created: ${roomCode} by ${playerName} (${sessionTemplate})`);
-      ack?.({ success: true, roomCode, playerId });
+      socketReply(socket, 'create_room', ack, { success: true, roomCode, playerId });
       socket.emit('game_state', sanitizeGameStateForPlayer(gameState, playerId));
     } catch (err) {
       console.error('[Error] create_room:', err);
-      ack?.({ error: '创建房间失败' });
+      socketReply(socket, 'create_room', ack, { error: '创建房间失败' });
     }
   });
 
-  socket.on('join_room', ({ playerName, roomCode }, ack) => {
+  socket.on('join_room', (...raw) => {
+    const { data: { playerName, roomCode }, ack } = parseSocketPayload(...raw);
     try {
-      if (!playerName || !playerName.trim()) return ack?.({ error: '请输入你的名字' });
-      if (!roomCode) return ack?.({ error: '请输入房间码' });
+      if (!playerName || !playerName.trim()) return socketReply(socket, 'join_room', ack, { error: '请输入你的名字' });
+      if (!roomCode) return socketReply(socket, 'join_room', ack, { error: '请输入房间码' });
 
       const { normalized: normalizedCode, gameState } = getOrLoadRoom(roomCode);
-      if (!gameState) return ack?.({ error: '房间不存在，请检查房间码' });
+      if (!gameState) return socketReply(socket, 'join_room', ack, { error: '房间不存在，请检查房间码' });
 
       const trimmedName = playerName.trim();
       const existingPlayer = Object.values(gameState.players).find(
@@ -375,17 +402,17 @@ io.on('connection', (socket) => {
       if (gameState.phase !== 'lobby' && existingPlayer) {
         attachPlayerSocket(socket, normalizedCode, existingPlayer);
         console.log(`[Room] ${trimmedName} rejoined ${normalizedCode}`);
-        ack?.({ success: true, playerId: existingPlayer.id, rejoined: true });
+        socketReply(socket, 'join_room', ack, { success: true, playerId: existingPlayer.id, rejoined: true });
         socket.emit('game_state', sanitizeGameStateForPlayer(gameState, existingPlayer.id));
         broadcastGameState(io, normalizedCode, gameState);
         return;
       }
 
-      if (gameState.phase !== 'lobby') return ack?.({ error: '游戏已开始，请用相同名字重新加入' });
-      if (existingPlayer) return ack?.({ error: '该名称已被使用' });
+      if (gameState.phase !== 'lobby') return socketReply(socket, 'join_room', ack, { error: '游戏已开始，请用相同名字重新加入' });
+      if (existingPlayer) return socketReply(socket, 'join_room', ack, { error: '该名称已被使用' });
 
       if (Object.keys(gameState.players).length >= 8) {
-        return ack?.({ error: '房间已满（最多8人）' });
+        return socketReply(socket, 'join_room', ack, { error: '房间已满（最多8人）' });
       }
 
       const playerId = generatePlayerId();
@@ -397,21 +424,22 @@ io.on('connection', (socket) => {
       gameState.players[playerId] = player;
       attachPlayerSocket(socket, normalizedCode, player);
       console.log(`[Room] ${trimmedName} joined ${normalizedCode}`);
-      ack?.({ success: true, playerId });
+      socketReply(socket, 'join_room', ack, { success: true, playerId });
       broadcastGameState(io, normalizedCode, gameState);
     } catch (err) {
       console.error('[Error] join_room:', err);
-      ack?.({ error: '加入房间失败' });
+      socketReply(socket, 'join_room', ack, { error: '加入房间失败' });
     }
   });
 
-  socket.on('rejoin_room', ({ playerName, roomCode, playerId }, ack) => {
+  socket.on('rejoin_room', (...raw) => {
+    const { data: { playerName, roomCode, playerId }, ack } = parseSocketPayload(...raw);
     try {
-      if (!playerName || !playerName.trim()) return ack?.({ error: '请输入你的名字' });
-      if (!roomCode) return ack?.({ error: '请输入房间码' });
+      if (!playerName || !playerName.trim()) return socketReply(socket, 'rejoin_room', ack, { error: '请输入你的名字' });
+      if (!roomCode) return socketReply(socket, 'rejoin_room', ack, { error: '请输入房间码' });
 
       const { normalized: normalizedCode, gameState } = getOrLoadRoom(roomCode);
-      if (!gameState) return ack?.({ error: '房间不存在或已结束' });
+      if (!gameState) return socketReply(socket, 'rejoin_room', ack, { error: '房间不存在或已结束' });
 
       let player = playerId ? gameState.players[playerId] : null;
       if (!player) {
@@ -419,19 +447,19 @@ io.on('connection', (socket) => {
           p => p.name.toLowerCase() === playerName.trim().toLowerCase()
         );
       }
-      if (!player) return ack?.({ error: '未找到该玩家，请重新加入房间' });
+      if (!player) return socketReply(socket, 'rejoin_room', ack, { error: '未找到该玩家，请重新加入房间' });
       if (player.name.toLowerCase() !== playerName.trim().toLowerCase()) {
-        return ack?.({ error: '名称与房间记录不匹配' });
+        return socketReply(socket, 'rejoin_room', ack, { error: '名称与房间记录不匹配' });
       }
 
       attachPlayerSocket(socket, normalizedCode, player);
       console.log(`[Room] ${player.name} reconnected to ${normalizedCode}`);
-      ack?.({ success: true, playerId: player.id });
+      socketReply(socket, 'rejoin_room', ack, { success: true, playerId: player.id });
       socket.emit('game_state', sanitizeGameStateForPlayer(gameState, player.id));
       broadcastGameState(io, normalizedCode, gameState);
     } catch (err) {
       console.error('[Error] rejoin_room:', err);
-      ack?.({ error: '重新连接失败' });
+      socketReply(socket, 'rejoin_room', ack, { error: '重新连接失败' });
     }
   });
 
@@ -475,6 +503,13 @@ io.on('connection', (socket) => {
     gameState.round = 1;
     gameState.timerEnd = Date.now() + 300000;
     console.log(`[Room ${roomCode}] Game started!`);
+    logEvent('session_started', {
+      roomCode,
+      meta: {
+        template: gameState.template || 'full',
+        playerCount: playerIds.length
+      }
+    });
     broadcastGameState(io, roomCode, gameState);
   });
 
@@ -675,52 +710,70 @@ io.on('connection', (socket) => {
   // -----------------------------------------------------------------------
   // COMMITMENT CEREMONY — persist commitments on game finish
   // -----------------------------------------------------------------------
-  socket.on('create_commitment', ({ action, ideaId, dueDays }, ack) => {
+  socket.on('create_commitment', (...raw) => {
+    const { data: { action, ideaId, dueDays, smartWhat }, ack } = parseSocketPayload(...raw);
     const result = getRoomBySocket(io, socket);
-    if (!result) return ack?.({ error: '未加入房间' });
+    if (!result) return socketReply(socket, 'create_commitment', ack, { error: '未加入房间' });
 
     const { roomCode, gameState } = result;
     const playerId = socket.playerId;
+    const playerName = gameState.players[playerId]?.name || socket.playerName || '';
 
-    if (!action || !action.trim() || action.trim().length < 4) {
-      return ack?.({ error: '请填写具体的行动承诺（至少4个字）' });
+    const what = (smartWhat || action || '').trim();
+    const days = dueDays || 14;
+    const smartErr = validateSmartCommitment(what, days);
+    if (smartErr) {
+      return socketReply(socket, 'create_commitment', ack, { error: smartErr });
     }
 
     if (gameState.phase !== 'commitment' && gameState.phase !== 'finished') {
-      return ack?.({ error: '当前不在承诺阶段' });
+      return socketReply(socket, 'create_commitment', ack, { error: '当前不在承诺阶段' });
     }
 
+    const finalAction = action && action.trim().length >= 8 ? action.trim() : formatSmartAction(playerName, what, days);
     const idea = ideaId ? gameState.ideas.find(i => i.id === ideaId) : null;
     const sessionId = saveSession(gameState);
 
     const commitment = createCommitment({
-      playerName: gameState.players[playerId]?.name || socket.playerName,
-      action: action.trim(),
+      playerName,
+      action: finalAction,
       ideaId: ideaId || null,
       ideaText: idea?.text || null,
       sessionId,
-      dueDays: dueDays || 14
+      dueDays: days,
+      template: gameState.template || 'full'
     });
 
     const commitmentRecord = {
       id: commitment.id,
-      playerName: gameState.players[playerId]?.name || socket.playerName,
-      action: action.trim(),
+      playerName,
+      action: finalAction,
       ideaId: ideaId || null,
       echoUrl: commitment.echoUrl,
       dueDate: commitment.dueDate,
+      dueDays: days,
       createdAt: Date.now()
     };
 
     if (!gameState.commitments) gameState.commitments = [];
     gameState.commitments.push(commitmentRecord);
 
-    // Broadcast the new commitment to all players in the room
     io.to(roomCode).emit('new_commitment', commitmentRecord);
 
-    console.log(`[Room ${roomCode}] Commitment from ${socket.playerName}: ${action.trim().substring(0, 40)}...`);
+    logEvent('commitment_created', {
+      roomCode,
+      sessionId,
+      playerName,
+      meta: {
+        template: gameState.template || 'full',
+        dueDays: days,
+        ideaId: ideaId || null
+      }
+    });
+
+    console.log(`[Room ${roomCode}] Commitment from ${playerName}: ${finalAction.substring(0, 40)}...`);
     broadcastGameState(io, roomCode, gameState);
-    ack?.({ success: true, ...commitment });
+    socketReply(socket, 'create_commitment', ack, { success: true, ...commitment });
   });
 
   // -----------------------------------------------------------------------
@@ -737,6 +790,17 @@ io.on('connection', (socket) => {
 
     gameState.phase = next;
     gameState.timerEnd = (next === 'finished' || next === 'commitment') ? null : (Date.now() + 300000);
+
+    if (next === 'commitment') {
+      logEvent('phase_entered', {
+        roomCode,
+        meta: {
+          phase: 'commitment',
+          playerCount: Object.keys(gameState.players).length,
+          template: gameState.template || 'full'
+        }
+      });
+    }
 
     // R2: underdog gold card
     if (next === 'r2_adapt') {
