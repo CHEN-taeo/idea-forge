@@ -4,7 +4,7 @@ This repository is a **monorepo with two unrelated product lines**. Read this be
 
 | Product | Location | What it is |
 |---------|----------|------------|
-| **Idea Forge** (构想熔炉) | repo **root** (`/`) | Collaborative brainstorming game — React SPA + Express/Socket.IO + SQLite, optional Electron desktop |
+| **Idea Forge** (构想熔炉) | repo **root** (`/`), `idea-forge-miniprogram/` | Collaborative brainstorming game — React SPA + Express/Socket.IO + SQLite, optional Electron desktop; **WeChat mini program** |
 | **破壳 / Poke** | `poke-mvp/`, `poke-miniprogram/`, `poke-server/` | Campus info filter → actionable cards |
 
 The two products **share no runtime code**. Confirm which product a request targets before editing.
@@ -17,6 +17,7 @@ The two products **share no runtime code**. Confirm which product a request targ
 - **Frontend:** React 18, TypeScript/TSX, Vite 6, Tailwind v4, shadcn/Radix UI, Motion, Socket.IO client
 - **Backend:** Node **ESM** (`"type": "module"`) — Express 5, Socket.IO 4, `better-sqlite3`
 - **Desktop:** Electron + electron-builder (`electron-main.js` forks `server.js`)
+- **WeChat mini program:** `idea-forge-miniprogram/` — WXML/WXSS/JS; `utils/config.js` → `SERVER_URL` (:3001); dev: 不校验合法域名
 - **AI:** OpenAI-compatible API (DeepSeek by default), in `ai.js`
 
 ### Entry points
@@ -33,7 +34,7 @@ npm run build    # vite build → dist/
 npm run desktop  # electron .
 npm run dist     # vite build + electron-builder --win
 ```
-Local dev usually needs **two processes**: `npm run server` (backend :3001) and `npm run dev` (frontend :5173).
+Local dev usually needs **two processes**: `npm run server` (backend :3001) and `npm run dev` (frontend :5173). Mini program only needs `npm run server` + 微信开发者工具打开 `idea-forge-miniprogram/`.
 
 ### Conventions
 - Import alias `@/` → `src/`. shadcn/ui lives in `src/app/components/ui/`.

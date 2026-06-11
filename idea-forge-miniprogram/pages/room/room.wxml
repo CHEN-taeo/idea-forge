@@ -1,0 +1,71 @@
+<view class="page" wx:if="{{gameState}}">
+  <view class="status-pill" style="margin-bottom:24rpx;">
+    <view class="dot {{connectionStatus === 'connected' ? 'dot--ok' : 'dot--bad'}}"></view>
+    {{roomCode}} · {{phaseLabel}}
+  </view>
+  <view class="lead" style="text-align:left;margin-bottom:28rpx;">{{gameState.problemStatement}}</view>
+
+  <!-- LOBBY -->
+  <block wx:if="{{gameState.phase === 'lobby'}}">
+    <view class="card" style="text-align:center;">
+      <block wx:if="{{isHost}}">
+        <view class="lead">大屏打开网页版投屏；参与者输入下方房间码</view>
+        <view class="room-code">{{gameState.roomCode}}</view>
+        <view class="btn btn--secondary btn--sm" bindtap="copyRoomCode">复制房间码</view>
+      </block>
+      <block wx:else>
+        <view class="display" style="font-size:34rpx;">已加入</view>
+        <view class="lead">等待主持人开始</view>
+      </block>
+      <view class="lead" style="margin-top:24rpx;">{{playerCount}} 人在线</view>
+      <view wx:for="{{playersArray}}" wx:key="id" style="font-size:26rpx;color:var(--muted);padding:8rpx 0;">
+        {{item.name}}{{item.ready ? ' · 已就绪' : ''}}
+      </view>
+    </view>
+    <view class="btn btn--secondary" bindtap="toggleReady">{{ready ? '取消就绪' : '我准备好了'}}</view>
+    <view wx:if="{{isHost}}" class="btn btn--primary" bindtap="startGame">开始围炉</view>
+  </block>
+
+  <!-- ROUND 1 SUBMIT -->
+  <block wx:elif="{{gameState.phase === 'r1_submit'}}">
+    <view class="card card--flat">
+      <view wx:if="{{myRole}}" class="lead" style="text-align:left;margin-bottom:16rpx;">角色 · {{myRole}}</view>
+      <textarea class="field-textarea" placeholder="写下你的想法…" value="{{ideaText}}" bindinput="onIdeaInput" />
+      <view class="field-label">选一张灵感卡</view>
+      <scroll-view scroll-x class="inspiration-scroll" enable-flex>
+        <view wx:for="{{inspirationCards}}" wx:key="*this" class="inspiration-chip {{selectedCard === index ? 'inspiration-chip--on' : ''}}" data-i="{{index}}" bindtap="pickCard">{{item}}</view>
+      </scroll-view>
+      <view class="btn btn--primary" bindtap="submitIdea">提交想法</view>
+    </view>
+    <view class="lead">已提交 {{gameState.ideas.length}} / {{playerCount}} 人</view>
+    <view wx:if="{{isHost}}" class="btn btn--text" bindtap="nextPhase">主持人：进入竞猜 →</view>
+  </block>
+
+  <!-- ROUND 1 GUESS -->
+  <block wx:elif="{{gameState.phase === 'r1_guess'}}">
+    <view wx:for="{{guessCards}}" wx:key="id" class="card card--flat" style="margin-bottom:16rpx;">
+      <view style="font-size:28rpx;color:var(--ink-soft);line-height:1.65;margin-bottom:20rpx;">{{item.text}}</view>
+      <view class="field-label">猜是谁写的？</view>
+      <view wx:for="{{item.candidates}}" wx:for-item="pl" wx:key="id" class="btn btn--secondary btn--sm" data-ideaid="{{item.id}}" data-authorid="{{pl.id}}" bindtap="pickGuess">{{pl.name}}</view>
+    </view>
+    <view wx:if="{{isHost}}" class="btn btn--primary" bindtap="nextPhase">主持人：下一轮 →</view>
+  </block>
+
+  <!-- OTHER PHASES -->
+  <block wx:else>
+    <view class="card card--flat">
+      <view class="lead" style="text-align:left;">小程序已同步状态。完整流程请在大屏继续。</view>
+    </view>
+    <view wx:for="{{flatIdeas}}" wx:key="id" class="idea-row">{{item.text}}</view>
+    <view wx:if="{{isHost && gameState.phase !== 'finished'}}" class="btn btn--primary" bindtap="nextPhase">主持人推进 →</view>
+  </block>
+
+  <view class="btn btn--text" bindtap="leaveRoom">离开房间</view>
+</view>
+
+<view class="page" wx:else>
+  <view class="card card--flat lead" style="text-align:center;padding:48rpx;">
+    <view class="dot dot--wait" style="margin:0 auto 16rpx;"></view>
+    连接房间中…
+  </view>
+</view>

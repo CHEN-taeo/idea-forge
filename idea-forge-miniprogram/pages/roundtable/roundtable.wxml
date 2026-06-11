@@ -1,0 +1,88 @@
+<!-- setup -->
+<view class="page" wx:if="{{phase === 'setup'}}">
+  <view class="eyebrow">围炉群英会</view>
+  <view class="display" style="font-size:40rpx;margin:12rpx 0 8rpx;">请大佬入席</view>
+  <view class="lead" style="margin-bottom:28rpx;">AI 风格化角色扮演，仅供思辨练习</view>
+
+  <view class="card card--flat">
+    <view class="field">
+      <text class="field-label">你的名字</text>
+      <input class="field-input" value="{{userName}}" bindinput="onNameInput" placeholder="例如：小陈" />
+    </view>
+    <view class="field">
+      <text class="field-label">聊什么？</text>
+      <textarea class="field-textarea" value="{{topic}}" bindinput="onTopicInput" placeholder="例如：要不要 all in AI 创业？" />
+    </view>
+  </view>
+
+  <view class="field-label">快捷组合</view>
+  <view wx:for="{{presets}}" wx:key="label" class="card card--flat" style="padding:24rpx;margin-bottom:12rpx;" data-ids="{{item.idsStr}}" bindtap="applyPreset">
+    <view style="font-size:28rpx;color:var(--accent);font-weight:500;">{{item.label}}</view>
+    <view class="lead" style="margin-top:6rpx;font-size:22rpx;">{{item.desc}}</view>
+  </view>
+
+  <view class="field-label">选 1–3 位嘉宾（{{selectedIds.length}}/3）</view>
+  <view wx:for="{{personaList}}" wx:key="id" class="persona-item {{item.selected ? 'persona-item--on' : ''}}" data-id="{{item.id}}" bindtap="togglePersona">
+    <text class="persona-emoji">{{item.emoji}}</text>
+    <view style="flex:1;">
+      <view class="persona-name">{{item.name}}</view>
+      <view class="persona-meta">{{item.title}}</view>
+    </view>
+    <text wx:if="{{item.selected}}" class="persona-check">✓</text>
+  </view>
+
+  <view class="btn btn--dark" bindtap="startTable">点燃围炉 →</view>
+</view>
+
+<!-- chat -->
+<view class="page--chat" wx:elif="{{phase === 'chat'}}">
+  <view class="chat-header">
+    <view class="eyebrow">围炉进行中 · {{aiOnline ? 'AI 在线' : '离线模板'}}</view>
+    <view class="lead" style="margin-top:8rpx;text-align:left;">{{topic}}</view>
+    <view wx:if="{{dispatchNote}}" class="card card--flat" style="margin-top:16rpx;padding:16rpx 20rpx;font-size:24rpx;">{{dispatchNote}}</view>
+  </view>
+
+  <scroll-view class="chat-scroll" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
+    <view wx:if="{{!messages.length && !busy}}" style="padding:24rpx 0;">
+      <view class="lead" style="text-align:center;margin-bottom:24rpx;">嘉宾已入席，等你先开口</view>
+      <view wx:for="{{starters}}" wx:key="*this" class="starter-btn" data-text="{{item}}" bindtap="useStarter">{{item}}</view>
+    </view>
+    <view wx:for="{{messages}}" wx:key="id" id="{{item.id}}" class="bubble {{item.mine ? 'bubble--me' : ''}}">
+      <text class="bubble-name">{{item.name}}</text>
+      <text>{{item.text}}</text>
+    </view>
+    <view wx:if="{{thinkingName}}" class="lead" style="text-align:center;padding:16rpx;">… {{thinkingName}} 思考中</view>
+    <view style="height:24rpx;"></view>
+  </scroll-view>
+
+  <view class="chat-composer">
+    <view style="display:flex;gap:16rpx;margin-bottom:12rpx;">
+      <view class="btn btn--text btn--sm" style="width:auto;flex:1;margin:0;" bindtap="runAnotherRound">💬 再聊一轮</view>
+      <view class="btn btn--text btn--sm" style="width:auto;flex:1;margin:0;color:var(--accent);" bindtap="endRoundtable">☯ 结束</view>
+    </view>
+    <view class="composer-row">
+      <input class="composer-input" value="{{input}}" bindinput="onInput" placeholder="说点什么…" confirm-type="send" bindconfirm="onSend" />
+      <view class="btn btn--primary composer-send {{busy || !canSend ? 'btn--disabled' : ''}}" bindtap="onSend">发送</view>
+    </view>
+  </view>
+</view>
+
+<!-- summary -->
+<view class="page" wx:elif="{{phase === 'summary'}}">
+  <view class="eyebrow">围炉小结</view>
+  <view class="display" style="font-size:40rpx;margin:12rpx 0 24rpx;">☯ 离场有交代</view>
+  <view class="card">
+    <view class="field-label">共识</view>
+    <view style="font-size:28rpx;color:var(--ink-soft);line-height:1.7;margin-bottom:24rpx;">{{summary.consensus}}</view>
+    <view class="field-label">分歧</view>
+    <view style="font-size:28rpx;color:var(--muted);margin-bottom:24rpx;">{{summary.disagreement}}</view>
+    <view class="field-label">下一步</view>
+    <view style="font-size:28rpx;color:var(--accent);line-height:1.7;">{{summary.nextStep}}</view>
+    <view wx:if="{{smartAction}}" style="margin-top:28rpx;">
+      <view class="field-label">建议行动</view>
+      <view style="font-size:28rpx;color:var(--ink-soft);">{{smartAction}}</view>
+    </view>
+  </view>
+  <view class="btn btn--primary" bindtap="copyExport">复制对谈报告</view>
+  <view class="btn btn--text" bindtap="backHome">返回首页</view>
+</view>
