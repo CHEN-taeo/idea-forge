@@ -22,6 +22,7 @@ Page({
     gameState: null,
     ready: false,
     connectionStatus: 'connecting',
+    connectionError: '',
     ideaText: '',
     selectedCard: null,
     inspirationCards: INSPIRATION_CARDS,
@@ -47,21 +48,25 @@ Page({
     this._onState = (state) => this.applyState(state);
     socket.on('game_state', this._onState);
 
-    socket.connect()
-      .then(() => {
-        this.setData({ connectionStatus: 'connected' });
-        socket.emit('rejoin_room', { roomCode, playerName, playerId }, (res) => {
-          if (res && res.error && !isHost) {
-            wx.showToast({ title: res.error, icon: 'none' });
-          } else if (res && res.playerId) {
-            this.setData({ playerId: res.playerId });
-          }
-        });
-      })
-      .catch((err) => {
-        this.setData({ connectionStatus: 'error' });
-        wx.showToast({ title: err.message || '连接失败', icon: 'none' });
-      });
+    this._joinRoom(roomCode, playerName, playerId, isHost);
+  },
+
+  async _joinRoom(roomCode, playerName, playerId, isHost) {
+    const socket = this._socket;
+    try {
+      await socket.connect();
+      this.setData({ connectionStatus: 'connected', connectionError: '' });
+      const res = await socket.emitAsync('rejoin_room', { roomCode, playerName, playerId }, 10000);
+      if (res && res.playerId) {
+        this.setData({ playerId: res.playerId });
+      }
+    } catch (err) {
+      const msg = err.message || '连接失败';
+      this.setData({ connectionStatus: 'error', connectionError: msg });
+      if (!isHost) {
+        wx.showModal({ title: '无法进入房间', content: msg, showCancel: false });
+      }
+    }
   },
 
   onUnload() {
@@ -104,6 +109,7 @@ Page({
       myRole,
       phaseLabel: phaseLabels[state.phase] || state.phase,
       flatIdeas: state.ideas || [],
+      connectionStatus: 'connected',
     });
     saveSession({ roomCode: state.roomCode, playerName: this.data.playerName, playerId: pid });
   },
@@ -145,6 +151,12 @@ Page({
 
   nextPhase() {
     this._socket.emit('next_phase');
+  },
+
+  retryConnect() {
+    const { roomCode, playerName, playerId, isHost } = this.data;
+    this.setData({ connectionStatus: 'connecting', connectionError: '' });
+    this._joinRoom(roomCode, playerName, playerId, isHost);
   },
 
   leaveRoom() {

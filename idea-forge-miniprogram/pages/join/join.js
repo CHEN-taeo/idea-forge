@@ -9,6 +9,10 @@ Page({
     submitting: false,
   },
 
+  onUnload() {
+    wx.hideLoading();
+  },
+
   onLoad(options) {
     if (options.room) {
       this.setData({ roomCode: options.room.toUpperCase() });
@@ -16,9 +20,11 @@ Page({
   },
 
   onNameInput(e) { this.setData({ playerName: e.detail.value }); },
-  onRoomInput(e) { this.setData({ roomCode: e.detail.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }); },
+  onRoomInput(e) {
+    this.setData({ roomCode: e.detail.value.toUpperCase().replace(/[^A-Z0-9]/g, '') });
+  },
 
-  submit() {
+  async submit() {
     const playerName = this.data.playerName.trim();
     const roomCode = this.data.roomCode.trim();
     if (!playerName) {
@@ -30,29 +36,27 @@ Page({
       return;
     }
     if (this.data.submitting) return;
+
     this.setData({ submitting: true });
-    wx.showLoading({ title: '加入中…' });
+    wx.showLoading({ title: '加入中…', mask: true });
 
     const socket = getGameSocket();
-    socket.disconnect();
-    socket.connect()
-      .then(() => {
-        socket.emit('join_room', { playerName, roomCode }, (res) => {
-          wx.hideLoading();
-          this.setData({ submitting: false });
-          if (!res || res.error) {
-            wx.showToast({ title: (res && res.error) || '加入失败', icon: 'none' });
-            return;
-          }
-          wx.redirectTo({
-            url: `/pages/room/room?room=${roomCode}&name=${encodeURIComponent(playerName)}&playerId=${res.playerId || ''}`,
-          });
-        });
-      })
-      .catch((err) => {
-        wx.hideLoading();
-        this.setData({ submitting: false });
-        wx.showToast({ title: err.message || '连接失败', icon: 'none' });
+    try {
+      await socket.connect();
+      const res = await socket.emitAsync('join_room', { playerName, roomCode });
+      wx.hideLoading();
+      this.setData({ submitting: false });
+      wx.redirectTo({
+        url: `/pages/room/room?room=${roomCode}&name=${encodeURIComponent(playerName)}&playerId=${res.playerId || ''}`,
       });
+    } catch (err) {
+      wx.hideLoading();
+      this.setData({ submitting: false });
+      wx.showModal({
+        title: '加入失败',
+        content: (err && err.message) || '请检查房间码与后端',
+        showCancel: false,
+      });
+    }
   },
 });

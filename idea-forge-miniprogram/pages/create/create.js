@@ -10,6 +10,10 @@ Page({
     submitting: false,
   },
 
+  onUnload() {
+    wx.hideLoading();
+  },
+
   onNameInput(e) { this.setData({ playerName: e.detail.value }); },
   onProblemInput(e) { this.setData({ problemStatement: e.detail.value }); },
 
@@ -17,7 +21,7 @@ Page({
     this.setData({ template: e.currentTarget.dataset.t });
   },
 
-  submit() {
+  async submit() {
     const playerName = this.data.playerName.trim();
     const problemStatement = this.data.problemStatement.trim();
     if (!playerName) {
@@ -29,33 +33,31 @@ Page({
       return;
     }
     if (this.data.submitting) return;
+
     this.setData({ submitting: true });
-    wx.showLoading({ title: '创建中…' });
+    wx.showLoading({ title: '创建中…', mask: true });
 
     const socket = getGameSocket();
-    socket.disconnect();
-    socket.connect()
-      .then(() => {
-        socket.emit('create_room', {
-          playerName,
-          problemStatement,
-          template: this.data.template,
-        }, (res) => {
-          wx.hideLoading();
-          this.setData({ submitting: false });
-          if (!res || res.error) {
-            wx.showToast({ title: (res && res.error) || '创建失败', icon: 'none' });
-            return;
-          }
-          wx.redirectTo({
-            url: `/pages/room/room?room=${res.roomCode}&name=${encodeURIComponent(playerName)}&host=1&playerId=${res.playerId || ''}`,
-          });
-        });
-      })
-      .catch((err) => {
-        wx.hideLoading();
-        this.setData({ submitting: false });
-        wx.showToast({ title: err.message || '连接失败', icon: 'none' });
+    try {
+      await socket.connect();
+      const res = await socket.emitAsync('create_room', {
+        playerName,
+        problemStatement,
+        template: this.data.template,
       });
+      wx.hideLoading();
+      this.setData({ submitting: false });
+      wx.redirectTo({
+        url: `/pages/room/room?room=${res.roomCode}&name=${encodeURIComponent(playerName)}&host=1&playerId=${res.playerId || ''}`,
+      });
+    } catch (err) {
+      wx.hideLoading();
+      this.setData({ submitting: false });
+      wx.showModal({
+        title: '创建失败',
+        content: (err && err.message) || '请确认已运行 npm run server',
+        showCancel: false,
+      });
+    }
   },
 });

@@ -64,8 +64,15 @@
 </view>
 
 <view class="page" wx:else>
-  <view class="card card--flat lead" style="text-align:center;padding:48rpx;">
-    <view class="dot dot--wait" style="margin:0 auto 16rpx;"></view>
-    连接房间中…
+  <view class="card card--flat" style="text-align:center;padding:48rpx;">
+    <view class="dot dot--wait" style="margin:0 auto 16rpx;" wx:if="{{connectionStatus === 'connecting'}}"></view>
+    <view class="dot dot--bad" style="margin:0 auto 16rpx;" wx:if="{{connectionStatus === 'error'}}"></view>
+    <view class="lead" wx:if="{{connectionStatus === 'connecting'}}">连接房间中…</view>
+    <block wx:elif="{{connectionStatus === 'error'}}">
+      <view class="display" style="font-size:32rpx;margin-bottom:12rpx;">连接失败</view>
+      <view class="lead" style="margin-bottom:24rpx;">{{connectionError}}</view>
+      <view class="btn btn--primary" bindtap="retryConnect">重试</view>
+      <view class="btn btn--text" bindtap="leaveRoom">返回</view>
+    </block>
   </view>
 </view>
