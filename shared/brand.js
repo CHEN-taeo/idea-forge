@@ -1,17 +1,22 @@
-/** Brand & copy — 默认与 shared/brand.js 一致，可用 VITE_BRAND_* 覆盖 */
+/**
+ * 构想熔炉 · 品牌文案（单一来源）
+ * 气质：东方夜话 × 现代思辨 · 炉边用语
+ * Web: src/app/lib/brand.ts
+ * 小程序: idea-forge-miniprogram/utils/brand.js
+ */
+module.exports = {
+  productName: '构想熔炉',
+  hostName: '陈老师',
+  slogan: '话落炉边，必有一诺相随。',
+  subtitle: '夜话不尽，离场有契。',
 
-export const brand = {
-  productName: import.meta.env.VITE_BRAND_PRODUCT || '构想熔炉',
-  hostName: import.meta.env.VITE_BRAND_HOST_NAME || '陈老师',
-  slogan: import.meta.env.VITE_BRAND_SLOGAN || '话落炉边，必有一诺相随。',
-  subtitle: import.meta.env.VITE_BRAND_SUBTITLE || '夜话不尽，离场有契。',
-
-  roomName: import.meta.env.VITE_BRAND_ROOM || '围炉',
-  roomEntryTitle: import.meta.env.VITE_BRAND_ROOM_ENTRY_TITLE || '入炉',
-  roomEntryDesc: import.meta.env.VITE_BRAND_ROOM_ENTRY || '无码开炉主持 · 有码扫码入席',
-  roomHostButton: import.meta.env.VITE_BRAND_ROOM_HOST_BTN || '开炉授席 →',
-  roomJoinButton: import.meta.env.VITE_BRAND_ROOM_JOIN_BTN || '入席就坐 →',
-  roomJoinHint: import.meta.env.VITE_BRAND_ROOM_JOIN_HINT || '炉主已定议题，入座静听即可。',
+  // 围炉 · 多人共燃
+  roomName: '围炉',
+  roomEntryTitle: '入炉',
+  roomEntryDesc: '无码开炉主持 · 有码扫码入席',
+  roomHostButton: '开炉授席 →',
+  roomJoinButton: '入席就坐 →',
+  roomJoinHint: '炉主已定议题，入座静听即可。',
   roomModeLabel: '炉温几何',
   roomModeQuick: '快火一轮',
   roomModeQuickHint: '构思 · 投票 · 认领',
@@ -21,8 +26,9 @@ export const brand = {
   roomTopicLabel: '今夜论什么？',
   roomCodePlaceholder: '留空 = 开炉主持',
 
-  sparkName: import.meta.env.VITE_BRAND_SPARK || '拾念',
-  sparkDesc: import.meta.env.VITE_BRAND_SPARK_DESC || '路过的心思，先留在炉边',
+  // 拾念 · 灵感捕捉
+  sparkName: '拾念',
+  sparkDesc: '路过的心思，先留在炉边',
   sparkCaptureTitle: '记下此刻',
   sparkCapturePlaceholder: '一闪而过的句子、画面、追问…',
   sparkTabCapture: '落笔',
@@ -37,8 +43,9 @@ export const brand = {
   sparkListToggle: '炉边最近',
   sparkSavedShort: '✓ 已落炉边',
 
-  roundtableName: import.meta.env.VITE_BRAND_ROUNDTABLE || '名士围炉',
-  roundtableDesc: import.meta.env.VITE_BRAND_ROUNDTABLE_DESC || '诸贤入席，陪你把话论透',
+  // 名士围炉 · AI 群贤
+  roundtableName: '名士围炉',
+  roundtableDesc: '诸贤入席，陪你把话论透',
   roundtableSetupTitle: '请贤入席',
   roundtableDisclaimer: '席位诸贤为 AI 风格演绎，不代表真人及其观点，仅供思辨。',
   roundtableIgnite: '🔥 燃炉开席 →',
@@ -59,19 +66,14 @@ export const brand = {
   roundtableEndBtn: '☯ 熄火收束',
   roundtableDebriefNext: '查看炉后自省 →',
 
+  // 传灯 · 热座
   hotSeatName: '传灯',
   hotSeatDesc: '一屏传灯，口述论道',
 
+  // 炉边旁白（AI / 离线）
   hostAiCoach: '炉边 AI 旁白',
   hostOfflineHint: '炉边离线锦囊',
 
-  soloName: import.meta.env.VITE_BRAND_SOLO || '独酌',
-} as const;
-
-export function reportFooter(date = new Date().toISOString().split('T')[0]) {
-  return `\n---\n\n*${brand.hostName} · ${brand.productName} · ${brand.slogan}*\n*生成于 ${date}*`;
-}
-
-export function coachLabel(mode: 'ai' | 'template' | string) {
-  return mode === 'ai' ? brand.hostAiCoach : brand.hostOfflineHint;
-}
+  // 遗留 · 独酌（入口已隐藏，导出等仍可能引用）
+  soloName: '独酌',
+};

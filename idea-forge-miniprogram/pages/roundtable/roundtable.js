@@ -49,7 +49,14 @@ Page({
     scrollInto: '',
   },
 
-  onLoad() {
+  onLoad(options) {
+    wx.setNavigationBarTitle({ title: brand.roundtableName });
+    if (options && options.topic) {
+      try {
+        const topic = decodeURIComponent(options.topic);
+        if (topic) this.setData({ topic });
+      } catch { /* ignore */ }
+    }
     fetchAiStatus().then(s => this.setData({ aiOnline: !!s.enabled }));
     this.history = [];
   },
@@ -202,7 +209,7 @@ Page({
   copyExport() {
     const { userName, topic, messages, summary, brand: b, smartAction } = this.data;
     const date = new Date().toISOString().split('T')[0];
-    let md = `# 围炉群英会 — ${userName}\n> ${date} · ${b.productName}\n\n## 话题\n${topic}\n\n`;
+    let md = `# ${b.roundtableName} — ${userName}\n> ${date} · ${b.productName}\n\n## 话题\n${topic}\n\n`;
     messages.forEach(m => { md += `\n**${m.name}：** ${m.text}\n`; });
     if (summary) {
       md += `\n## 共识\n${summary.consensus}\n\n## 分歧\n${summary.disagreement}\n\n## 下一步\n${summary.nextStep}\n`;

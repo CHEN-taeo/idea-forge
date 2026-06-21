@@ -1,54 +1,90 @@
 <view class="page">
+
   <view class="hero">
+
     <view class="mark">☯</view>
+
     <view class="hero-title display">{{brand.productName}}</view>
+
     <view class="hero-sub">{{brand.hostName}} · {{brand.subtitle}}</view>
+
     <view class="lead" style="margin-top:20rpx;padding:0 16rpx;">{{brand.slogan}}</view>
+
     <view class="status-pill" bindtap="checkServer">
+
       <view class="dot {{checking ? 'dot--wait' : (serverOk ? 'dot--ok' : 'dot--bad')}}"></view>
+
       <text wx:if="{{checking}}">检测连接…</text>
+
       <text wx:elif="{{serverOk}}">{{aiEnabled ? 'AI 教练在线' : '后端已连接 · 离线模板可用'}}</text>
+
       <text wx:else>未连接 · 点此重试</text>
+
     </view>
+
     <view wx:if="{{serverHint && !checking}}" class="lead" style="margin-top:16rpx;font-size:22rpx;color:#9b2226;">{{serverHint}}</view>
+
     <view wx:if="{{!serverOk && !checking}}" class="lead" style="margin-top:8rpx;font-size:20rpx;">根目录运行 npm run server → {{serverUrl}}</view>
+
   </view>
+
+
 
   <view class="mode-list">
-    <view class="mode-tile {{serverOk ? '' : 'mode-tile--disabled'}}" bindtap="tapCreate" hover-class="none">
+
+    <view class="mode-tile {{serverOk ? '' : 'mode-tile--disabled'}}" bindtap="tapRoom" hover-class="none">
+
       <view class="mode-icon">🔥</view>
+
       <view class="mode-body">
-        <view class="mode-title">发起{{brand.roomName}}</view>
-        <view class="mode-desc">你投屏，大家用手机加入</view>
+
+        <view class="mode-title">{{brand.roomEntryTitle}}</view>
+
+        <view class="mode-desc">{{brand.roomEntryDesc}}</view>
+
       </view>
+
       <text class="mode-arrow">›</text>
+
     </view>
 
-    <view class="mode-tile" bindtap="tapSolo">
-      <view class="mode-icon">🧠</view>
+
+
+    <view class="mode-tile" bindtap="tapSpark">
+
+      <view class="mode-icon">✨</view>
+
       <view class="mode-body">
-        <view class="mode-title">{{brand.soloName}}</view>
-        <view class="mode-desc">一个人，15 分钟想明白</view>
+
+        <view class="mode-title">{{brand.sparkName}}</view>
+
+        <view class="mode-desc">{{brand.sparkDesc}}</view>
+
       </view>
+
       <text class="mode-arrow">›</text>
+
     </view>
+
+
 
     <view class="mode-tile mode-tile--featured" bindtap="tapRoundtable">
+
       <view class="mode-icon">🪑</view>
+
       <view class="mode-body">
-        <view class="mode-title">围炉群英会</view>
-        <view class="mode-desc">请 AI 嘉宾入席 · 陪你聊透</view>
+
+        <view class="mode-title">{{brand.roundtableName}}</view>
+
+        <view class="mode-desc">{{brand.roundtableDesc}}</view>
+
       </view>
+
       <text class="mode-arrow" style="color:rgba(250,249,245,0.4);">›</text>
+
     </view>
 
-    <view class="mode-tile {{serverOk ? '' : 'mode-tile--disabled'}}" bindtap="tapJoin">
-      <view class="mode-icon">📱</view>
-      <view class="mode-body">
-        <view class="mode-title">加入{{brand.roomName}}</view>
-        <view class="mode-desc">输入主持人分享的房间码</view>
-      </view>
-      <text class="mode-arrow">›</text>
-    </view>
   </view>
+
 </view>
+

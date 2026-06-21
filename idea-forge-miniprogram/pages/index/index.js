@@ -14,7 +14,7 @@ Page({
 
   onLoad(options) {
     if (options.room) {
-      wx.redirectTo({ url: `/pages/join/join?room=${options.room}` });
+      wx.redirectTo({ url: `/pages/room-entry/room-entry?room=${options.room}` });
       return;
     }
     this.tryResumeRoom();
@@ -63,7 +63,7 @@ Page({
     });
   },
 
-  tapCreate() {
+  tapRoom() {
     if (!this.data.serverOk) {
       wx.showModal({
         title: '后端未连接',
@@ -72,23 +72,11 @@ Page({
       });
       return;
     }
-    wx.navigateTo({ url: '/pages/create/create' });
+    wx.navigateTo({ url: '/pages/room-entry/room-entry' });
   },
 
-  tapJoin() {
-    if (!this.data.serverOk) {
-      wx.showModal({
-        title: '后端未连接',
-        content: `在项目根目录运行：\nnpm run server\n\n地址：${SERVER_URL}`,
-        showCancel: false,
-      });
-      return;
-    }
-    wx.navigateTo({ url: '/pages/join/join' });
-  },
-
-  tapSolo() {
-    wx.navigateTo({ url: '/pages/solo/solo' });
+  tapSpark() {
+    wx.navigateTo({ url: '/pages/spark/spark' });
   },
 
   tapRoundtable() {

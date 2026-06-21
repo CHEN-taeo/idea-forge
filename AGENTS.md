@@ -40,6 +40,7 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 - Import alias `@/` → `src/`. shadcn/ui lives in `src/app/components/ui/`.
 - Game types: `src/app/types/game.ts`. Static data: `src/app/data/game-data.ts`.
 - Brand/copy strings: `src/app/lib/brand.ts` (driven by `VITE_BRAND_*` env). **Don't hardcode product names** — use brand helpers.
+- Visual/brand: **`docs/构想熔炉-设计语言.md`** · `src/styles/theme.css` · `public/personas/` · `FireCore.tsx`
 - UI copy is **Chinese**. Match existing tone.
 - Client AI calls split by mode:
   - **Multiplayer** (prompts, expand, round summary) → Socket.IO events via `src/app/hooks/useGameSocket.ts`

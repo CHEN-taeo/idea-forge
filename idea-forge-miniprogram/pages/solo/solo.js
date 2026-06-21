@@ -21,6 +21,15 @@ Page({
     actionLoading: false,
   },
 
+  onLoad(options) {
+    if (options.problem) {
+      try {
+        const problem = decodeURIComponent(options.problem);
+        if (problem) this.setData({ problem });
+      } catch { /* ignore */ }
+    }
+  },
+
   onNameInput(e) { this.setData({ name: e.detail.value }); },
   onProblemInput(e) { this.setData({ problem: e.detail.value }); },
   onIdeaInput(e) {

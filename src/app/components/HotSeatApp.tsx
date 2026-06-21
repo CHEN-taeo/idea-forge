@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useHotSeat } from '../hooks/useHotSeat';
 import { INSPIRATION_CARDS, ROLE_DESCRIPTIONS, ROLE_LABELS } from '../data/game-data';
 import { PhaseTimer } from './PhaseTimer';
-import { cn } from './ui/utils';
+import { brand } from '../lib/brand';
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
@@ -53,8 +53,8 @@ function SetupScreen({ onCreate }: { onCreate: (names: string[], problem: string
       <div className="w-full max-w-lg">
         <div className="text-center mb-10">
           <div className="text-5xl mb-4">🔥</div>
-          <h1 className="text-3xl font-light text-white/80 mb-2">热座模式</h1>
-          <p className="text-base text-white/30">一块屏幕，当面辩论，不用手机</p>
+          <h1 className="text-3xl font-light text-white/80 mb-2">{brand.hotSeatName}</h1>
+          <p className="text-base text-white/30">{brand.hotSeatDesc}</p>
         </div>
 
         <div className="glass rounded-2xl p-6 mb-4">
@@ -98,7 +98,7 @@ function SetupScreen({ onCreate }: { onCreate: (names: string[], problem: string
           disabled={names.length < 2 || !problem.trim()}
           className="w-full h-14 rounded-2xl btn-primary text-lg font-medium disabled:btn-disabled"
         >
-          🔥 开始热座 — {names.length} 人
+          🔥 传灯开席 — {names.length} 人
         </button>
       </div>
     </div>

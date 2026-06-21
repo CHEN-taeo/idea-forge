@@ -5,6 +5,7 @@ import { brand } from '../lib/brand';
 import { PERSONAS, getPersona, type Persona } from '../data/personas';
 import { fetchPersonaReply, fetchPersonaDispatch, fetchRoundtableSummary, fetchSmartAction, fetchAiStatus, type PersonaTurn, type RoundtableSummary, type AiMode, type DispatchMode } from '../lib/aiClient';
 import { PersonaPortrait } from './PersonaPortrait';
+import { FireCore } from './FireCore';
 import { guestSeats, userSeat, tableEllipse } from '../lib/roundtableLayout';
 
 interface Msg {
@@ -16,8 +17,7 @@ interface Msg {
   replyMode?: AiMode;
 }
 
-const PERSONA_DISCLAIMER =
-  '席位嘉宾由 AI 以风格化角色扮演生成，不代表真实人物或其观点，仅供思辨练习。';
+const PERSONA_DISCLAIMER = brand.roundtableDisclaimer;
 
 const MAX_PICK = 3;
 const USER_COLOR = '#fbbf24';
@@ -57,8 +57,8 @@ function ReplyModeBadge({ mode }: { mode: AiMode }) {
       className={cn(
         'inline-flex items-center text-[9px] px-1.5 py-0.5 rounded-md tracking-wide',
         mode === 'ai'
-          ? 'text-sky-300/60 bg-sky-400/[0.08] border border-sky-400/15'
-          : 'text-white/28 bg-white/[0.04] border border-white/[0.08]'
+          ? 'text-[var(--if-success)] bg-[rgba(45,106,79,0.1)] border border-[rgba(45,106,79,0.2)]'
+          : 'text-[var(--if-muted-soft)] bg-[var(--if-surface)] border border-[var(--if-line)]'
       )}
     >
       {mode === 'ai' ? 'AI · 风格演绎' : '离线模板'}
@@ -72,12 +72,12 @@ function AiStatusChip({ enabled, model }: { enabled: boolean; model?: string }) 
       className={cn(
         'inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border',
         enabled
-          ? 'text-sky-300/65 bg-sky-400/[0.08] border-sky-400/15'
-          : 'text-white/28 bg-white/[0.04] border-white/[0.08]'
+          ? 'text-[var(--if-success)] bg-[rgba(45,106,79,0.08)] border-[rgba(45,106,79,0.2)]'
+          : 'text-[var(--if-muted-soft)] bg-[var(--if-surface)] border-[var(--if-line)]'
       )}
       title={enabled ? `AI 在线${model ? ` · ${model}` : ''}` : '未配置 API Key，嘉宾回复使用离线模板'}
     >
-      <span className={cn('size-1.5 rounded-full', enabled ? 'bg-sky-400/80' : 'bg-white/25')} />
+      <span className={cn('size-1.5 rounded-full', enabled ? 'bg-[var(--if-success)]' : 'bg-[var(--if-muted-soft)]')} />
       {enabled ? 'AI 在线' : '离线模板模式'}
     </span>
   );
@@ -107,13 +107,13 @@ function DispatchNoteBar({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-left px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-amber-300/20 transition-colors"
+        className="w-full text-left px-3.5 py-2.5 rounded-xl if-card--flat hover:border-[var(--if-accent-border)] transition-colors"
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] uppercase tracking-[0.14em] text-amber-200/40">{prefix}</span>
-          <span className="text-[10px] text-white/25">{expanded ? '收起' : '展开'}</span>
+          <span className="if-eyebrow">{prefix}</span>
+          <span className="text-[10px] text-[var(--if-muted-soft)]">{expanded ? '收起' : '展开'}</span>
         </div>
-        <p className={cn('text-[11px] text-white/45 leading-relaxed mt-1', !expanded && 'line-clamp-1')}>
+        <p className={cn('text-[11px] text-[var(--if-muted)] leading-relaxed mt-1', !expanded && 'line-clamp-1')}>
           {note}
         </p>
       </button>
@@ -125,7 +125,7 @@ function PersonaDisclaimer({ className }: { className?: string }) {
   return (
     <p
       className={cn(
-        'text-[10px] text-white/28 leading-relaxed px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06]',
+        'text-[10px] text-[var(--if-muted-soft)] leading-relaxed px-3 py-2 rounded-xl if-card--flat',
         className
       )}
     >
@@ -176,7 +176,7 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
       )}
       <div className={cn('max-w-[min(78%,420px)]', mine && 'flex flex-col items-end')}>
         <p
-          className={cn('text-[10px] mb-1.5 font-medium tracking-wide flex items-center gap-2 flex-wrap', mine ? 'text-amber-200/55 justify-end' : '')}
+          className={cn('text-[10px] mb-1.5 font-medium tracking-wide flex items-center gap-2 flex-wrap', mine ? 'text-[var(--if-accent)] justify-end' : '')}
           style={!mine ? { color: `${msg.color}cc` } : undefined}
         >
           <span>{msg.name}</span>
@@ -184,16 +184,10 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
         </p>
         <div
           className={cn(
-            'relative rounded-2xl px-4 py-3 text-[0.9rem] leading-[1.65] text-white/85',
-            mine ? 'rounded-br-md' : 'rounded-bl-md'
+            'if-bubble',
+            mine && 'if-bubble--me rounded-br-md',
+            !mine && 'rounded-bl-md'
           )}
-          style={{
-            background: mine
-              ? 'linear-gradient(135deg, rgba(251,191,36,0.16) 0%, rgba(251,146,60,0.08) 100%)'
-              : `linear-gradient(135deg, ${msg.color}20 0%, ${msg.color}08 100%)`,
-            border: `1px solid ${mine ? 'rgba(251,191,36,0.28)' : `${msg.color}44`}`,
-            boxShadow: `0 2px 12px ${mine ? 'rgba(251,191,36,0.08)' : `${msg.color}15`}`,
-          }}
         >
           {msg.text}
         </div>
@@ -205,8 +199,14 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
 // ---------------------------------------------------------------------------
 // 配置页
 // ---------------------------------------------------------------------------
-function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: string[]) => void }) {
-  const [topic, setTopic] = useState('');
+function SetupScreen({
+  onStart,
+  seedTopic = '',
+}: {
+  onStart: (topic: string, name: string, ids: string[]) => void;
+  seedTopic?: string;
+}) {
+  const [topic, setTopic] = useState(seedTopic);
   const [name, setName] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
@@ -225,7 +225,7 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
   const canStart = canNext && picked.length > 0;
 
   return (
-    <div className="min-h-screen rt-scene-bg">
+    <div className="min-h-screen if-page">
       <div className="max-w-xl mx-auto px-5 pb-28 pt-10">
         {/* Hero */}
         <motion.div
@@ -233,13 +233,12 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl mb-5 rt-float"
-               style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
+          <div className="if-mark mx-auto mb-5 rt-float">
             <span className="text-3xl">🪑</span>
           </div>
-          <h1 className="text-[1.65rem] font-light text-white/90 tracking-tight mb-2">围炉群英会</h1>
-          <p className="text-sm text-white/35 max-w-xs mx-auto leading-relaxed">
-            请几位思想者入席，围炉夜话，把问题聊透
+          <h1 className="text-[1.65rem] font-light text-[var(--if-ink)] tracking-tight mb-2 font-display">{brand.roundtableName}</h1>
+          <p className="text-sm text-[var(--if-muted)] max-w-xs mx-auto leading-relaxed">
+            {brand.roundtableDesc}
           </p>
           <PersonaDisclaimer className="max-w-sm mx-auto mt-5 text-left" />
         </motion.div>
@@ -256,16 +255,16 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
               <span className={cn(
                 'size-7 rounded-full text-xs flex items-center justify-center transition-all',
                 step === s
-                  ? 'bg-amber-300/20 border border-amber-300/40 text-amber-200/90'
+                  ? 'bg-[var(--if-accent-soft)] border border-[var(--if-accent-border)] text-[var(--if-accent)]'
                   : step > s
-                    ? 'bg-emerald-400/10 border border-emerald-400/30 text-emerald-300/70'
-                    : 'bg-white/[0.03] border border-white/[0.08] text-white/25'
+                    ? 'bg-[rgba(45,106,79,0.1)] border border-[rgba(45,106,79,0.25)] text-[var(--if-success)]'
+                    : 'bg-[var(--if-surface)] border border-[var(--if-line)] text-[var(--if-muted-soft)]'
               )}>
                 {step > s ? '✓' : s}
               </span>
               <span className={cn(
                 'text-[11px] hidden sm:inline',
-                step === s ? 'text-white/60' : 'text-white/25'
+                step === s ? 'text-[var(--if-ink-soft)]' : 'text-[var(--if-muted-soft)]'
               )}>
                 {s === 1 ? '定话题' : '选嘉宾'}
               </span>
@@ -282,20 +281,20 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
               exit={{ opacity: 0, x: 16 }}
               className="space-y-5"
             >
-              <div className="page-card p-5 space-y-4">
+              <div className="if-card p-5 space-y-4">
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.18em] text-white/25 mb-2 block">你的名字</label>
+                  <label className="if-field-label">你的名字</label>
                   <input
-                    className="w-full h-11 px-4 rounded-xl glass-input text-sm text-white/85 placeholder:text-white/18 outline-none focus:border-amber-300/25 transition-colors"
+                    className="if-field-input"
                     placeholder="例如：小陈"
                     value={name}
                     onChange={e => setName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.18em] text-white/25 mb-2 block">今晚聊什么？</label>
+                  <label className="if-field-label">{brand.roundtableTopicLabel}</label>
                   <textarea
-                    className="w-full h-28 px-4 py-3 rounded-xl glass-input text-sm text-white/85 placeholder:text-white/18 outline-none resize-none focus:border-amber-300/25 transition-colors"
+                    className="if-field-textarea"
                     placeholder="例如：该不该辞职创业？AI 时代我该学什么？"
                     value={topic}
                     onChange={e => setTopic(e.target.value)}
@@ -308,7 +307,7 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                 disabled={!canNext}
                 className="w-full h-12 rounded-xl btn-primary text-sm disabled:btn-disabled"
               >
-                下一步 · 请嘉宾入席 →
+                {brand.roundtableNextGuests}
               </button>
             </motion.div>
           ) : (
@@ -319,24 +318,23 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
               exit={{ opacity: 0, x: -16 }}
             >
               {/* 话题摘要 */}
-              <div className="mb-5 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] uppercase tracking-wider text-white/20 mb-1">话题</p>
-                <p className="text-sm text-white/55 leading-relaxed line-clamp-2">{topic}</p>
+              <div className="mb-5 px-4 py-3 rounded-xl if-card--flat">
+                <p className="if-eyebrow mb-1">话题</p>
+                <p className="text-sm text-[var(--if-muted)] leading-relaxed line-clamp-2">{topic}</p>
               </div>
 
-              {/* 快捷组合 */}
               <div className="mb-5">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-white/20 mb-2.5">快捷入席</p>
+                <p className="if-field-label">{brand.roundtablePresetLabel}</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                   {PRESETS.map(preset => (
                     <button
                       key={preset.label}
                       type="button"
                       onClick={() => applyPreset(preset.ids)}
-                      className="flex-shrink-0 px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-amber-300/25 hover:bg-amber-300/[0.04] transition-all text-left"
+                      className="flex-shrink-0 px-3.5 py-2 rounded-xl if-card--flat hover:border-[var(--if-accent-border)] transition-all text-left"
                     >
-                      <p className="text-xs text-white/70">{preset.label}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5">{preset.desc}</p>
+                      <p className="text-xs text-[var(--if-ink-soft)]">{preset.label}</p>
+                      <p className="text-[10px] text-[var(--if-muted)] mt-0.5">{preset.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -349,11 +347,11 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                   animate={{ opacity: 1, height: 'auto' }}
                   className="mb-5 overflow-hidden"
                 >
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-white/20 mb-2">入席预览</p>
-                  <div className="relative h-[140px] rounded-2xl bg-black/20 border border-white/[0.06] overflow-hidden">
+                  <p className="if-field-label mb-2">入席预览</p>
+                  <div className="relative h-[140px] rounded-2xl if-card--flat overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center opacity-30">
                       <div className="size-20 rounded-full border border-dashed border-amber-300/20" />
-                      <span className="absolute text-lg">🔥</span>
+                      <span className="absolute"><FireCore size={28} /></span>
                     </div>
                     {picked.map((id, i) => {
                       const p = getPersona(id);
@@ -381,10 +379,10 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
 
               {/* 人物卡片 */}
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">
+                <p className="if-field-label">
                   选择入席嘉宾
                 </p>
-                <span className="text-[10px] tabular-nums text-amber-200/50">{picked.length}/{MAX_PICK}</span>
+                <span className="text-[10px] tabular-nums text-[var(--if-accent)]">{picked.length}/{MAX_PICK}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
@@ -402,16 +400,10 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                       onClick={() => toggle(p.id)}
                       disabled={full}
                       className={cn(
-                        'relative text-left rounded-2xl p-4 border transition-all duration-300 flex gap-3.5 items-start overflow-hidden',
-                        on
-                          ? 'bg-white/[0.06] scale-[1.01]'
-                          : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.14] hover:bg-white/[0.035]',
+                        'if-persona-item relative transition-all duration-300',
+                        on && 'if-persona-item--on scale-[1.01]',
                         full && 'opacity-35 pointer-events-none'
                       )}
-                      style={on ? {
-                        borderColor: `${p.color}66`,
-                        boxShadow: `0 4px 24px ${p.color}22, inset 0 1px 0 ${p.color}18`,
-                      } : undefined}
                     >
                       {on && (
                         <span
@@ -423,9 +415,9 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                       )}
                       <PersonaPortrait persona={p} color={p.color} size={48} active={on} />
                       <div className="min-w-0 flex-1 pt-0.5">
-                        <p className="text-sm text-white/85 font-normal">{p.name}</p>
-                        <p className="text-[10px] mt-0.5" style={{ color: `${p.color}bb` }}>{p.title}</p>
-                        <p className="text-[11px] text-white/38 mt-1.5 leading-relaxed line-clamp-2">{p.blurb}</p>
+                        <p className="text-sm text-[var(--if-ink)] font-normal">{p.name}</p>
+                        <p className="text-[10px] mt-0.5 text-[var(--if-muted)]">{p.title}</p>
+                        <p className="text-[11px] text-[var(--if-muted)] mt-1.5 leading-relaxed line-clamp-2">{p.blurb}</p>
                       </div>
                     </motion.button>
                   );
@@ -436,7 +428,7 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="h-12 px-5 rounded-xl glass-light text-sm text-white/35 hover:text-white/55"
+                  className="h-12 px-5 rounded-xl if-btn-secondary text-sm text-[var(--if-muted)] hover:text-[var(--if-ink-soft)]"
                 >
                   返回
                 </button>
@@ -445,7 +437,7 @@ function SetupScreen({ onStart }: { onStart: (topic: string, name: string, ids: 
                   disabled={!canStart}
                   className="flex-1 h-12 rounded-xl btn-primary text-sm disabled:btn-disabled"
                 >
-                  🔥 入座，点燃围炉 →
+                  {brand.roundtableIgnite}
                 </button>
               </div>
             </motion.div>
@@ -496,7 +488,7 @@ function RoundTable({
           <ellipse cx="50" cy="50" rx="38" ry="30" fill="none" stroke="rgba(251,191,36,0.35)" strokeWidth="0.4" strokeDasharray="2 3" />
         </svg>
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rt-fire-core">
-          <span className="text-2xl opacity-85">🔥</span>
+          <FireCore size={44} />
         </div>
       </motion.div>
 
@@ -669,19 +661,19 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
   const guestNames = useMemo(() => personas.map(p => p.name).join('、'), [personas]);
 
   return (
-    <div className="min-h-screen flex flex-col rt-scene-bg">
+    <div className="min-h-screen flex flex-col if-page">
       {/* 顶栏 + 圆桌 */}
-      <div className="flex-shrink-0 sticky top-0 z-20 rt-composer border-b border-white/[0.04] pb-4 pt-12 px-4">
+      <div className="flex-shrink-0 sticky top-0 z-20 if-composer border-b border-[var(--if-line)] pb-4 pt-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-1 px-6"
         >
           <div className="flex items-center justify-center gap-2 mb-1.5 flex-wrap">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-amber-200/35">围炉进行中</p>
+            <p className="if-eyebrow">{brand.roundtableLive}</p>
             {aiOnline && <AiStatusChip enabled={aiOnline.enabled} model={aiOnline.model} />}
           </div>
-          <p className="text-[13px] text-white/50 leading-relaxed line-clamp-2">{topic}</p>
+          <p className="text-[13px] text-[var(--if-muted)] leading-relaxed line-clamp-2">{topic}</p>
         </motion.div>
         <RoundTable personas={personas} userName={userName} thinkingId={thinkingId} />
       </div>
@@ -704,9 +696,9 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
             transition={{ delay: 0.4 }}
             className="text-center py-6"
           >
-            <p className="text-sm text-white/30 mb-1">围炉已点燃</p>
-            <p className="text-xs text-white/20 mb-4 leading-relaxed">
-              {guestNames} 已入席，等你先开口
+            <p className="text-sm text-[var(--if-muted)] mb-1">{brand.roundtableKindle}</p>
+            <p className="text-xs text-[var(--if-muted-soft)] mb-4 leading-relaxed">
+              {guestNames}
             </p>
             <PersonaDisclaimer className="max-w-sm mx-auto mb-6 text-left" />
             <div className="flex flex-col gap-2 max-w-sm mx-auto">
@@ -718,7 +710,7 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 + i * 0.08 }}
                   onClick={() => handleSend(prompt)}
-                  className="text-left px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-amber-300/25 hover:bg-amber-300/[0.04] text-sm text-white/45 hover:text-white/65 transition-all"
+                  className="if-starter-btn"
                 >
                   {prompt}
                 </motion.button>
@@ -765,7 +757,7 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
                 type="button"
                 onClick={() => runRound()}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 text-[11px] text-white/35 hover:text-white/60 disabled:opacity-30 transition-colors px-2 py-1 rounded-lg hover:bg-white/[0.04]"
+                className="inline-flex items-center gap-1.5 text-[11px] text-[var(--if-muted)] hover:text-[var(--if-ink-soft)] disabled:opacity-30 transition-colors px-2 py-1 rounded-lg hover:bg-[var(--if-surface)]"
               >
                 <span>💬</span> 让他们再聊一轮
               </button>
@@ -774,9 +766,9 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
                   type="button"
                   onClick={() => onEnd(messages)}
                   disabled={busy}
-                  className="inline-flex items-center gap-1 text-[11px] text-amber-300/55 hover:text-amber-300/85 px-2 py-1 rounded-lg hover:bg-amber-300/[0.06] disabled:opacity-30"
+                  className="inline-flex items-center gap-1 text-[11px] text-[var(--if-accent)] hover:opacity-80 px-2 py-1 rounded-lg hover:bg-[var(--if-accent-soft)] disabled:opacity-30"
                 >
-                  ☯ 结束围炉
+                  {brand.roundtableEndBtn}
                 </button>
               )}
             </div>
@@ -791,7 +783,7 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
                 }}
                 className={cn(
                   'text-[11px] transition-colors px-2 py-1 rounded-lg',
-                  exported ? 'text-emerald-300/80' : 'text-amber-300/55 hover:text-amber-300/85 hover:bg-amber-300/[0.06]'
+                  exported ? 'text-[var(--if-success)]' : 'text-[var(--if-accent)] hover:bg-[var(--if-accent-soft)]'
                 )}
               >
                 {exported ? '✓ 已导出' : '导出对谈 ↓'}
@@ -800,7 +792,6 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
           </div>
         )}
 
-        {/* 话术模板 + @ 提示 */}
         <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {PHRASE_TEMPLATES.map(t => (
             <button
@@ -808,19 +799,19 @@ function TableScreen({ topic, userName, personas, onExport, onEnd }: {
               type="button"
               disabled={busy}
               onClick={() => setInput(prev => (prev ? `${prev}${t.text}` : t.text))}
-              className="flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] text-white/35 bg-white/[0.04] border border-white/[0.07] hover:border-amber-300/25 hover:text-white/55 disabled:opacity-30"
+              className="flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] text-[var(--if-muted)] bg-[var(--if-surface)] border border-[var(--if-line)] hover:border-[var(--if-accent-border)] hover:text-[var(--if-ink-soft)] disabled:opacity-30"
             >
               {t.label}
             </button>
           ))}
         </div>
-        <p className="text-[9px] text-white/18 mb-2 px-0.5">输入 @嘉宾名 可指定谁来接话</p>
+        <p className="text-[9px] text-[var(--if-muted-soft)] mb-2 px-0.5">输入 @嘉宾名 可指定谁来接话</p>
 
         <div className="flex gap-2.5 items-end">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
-              className="w-full bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white/88 text-sm px-4 py-3 resize-none outline-none min-h-[48px] max-h-32 placeholder:text-white/22 focus:border-amber-300/30 focus:bg-white/[0.06] transition-all"
+              className="w-full if-field-input rounded-2xl text-sm px-4 py-3 resize-none min-h-[48px] max-h-32"
               placeholder={busy ? `${thinkingPersona?.name ?? '嘉宾'}正在思考…` : '说点什么… Enter 发送'}
               rows={1}
               value={input}
@@ -857,16 +848,16 @@ function DebriefScreen({ onNext }: { onNext: (scores: DebriefScores) => void }) 
   const [insight, setInsight] = useState('');
 
   return (
-    <div className="min-h-screen rt-scene-bg px-5 py-12 max-w-md mx-auto">
+    <div className="min-h-screen if-page px-5 py-12 max-w-md mx-auto">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-200/35 mb-2">围炉复盘</p>
-        <h2 className="text-xl font-light text-white/85 mb-2">聊得怎么样？</h2>
-        <p className="text-sm text-white/30 mb-8 leading-relaxed">匿名自评，只保存在本机报告里。1 = 完全不同意，5 = 非常同意</p>
+        <p className="if-eyebrow mb-2">{brand.roundtableDebrief}</p>
+        <h2 className="text-xl font-light text-[var(--if-ink)] mb-2 font-display">聊得怎么样？</h2>
+        <p className="text-sm text-[var(--if-muted)] mb-8 leading-relaxed">匿名自评，只保存在本机报告里。1 = 完全不同意，5 = 非常同意</p>
 
         <div className="space-y-6 mb-8">
           {DEBRIEF_QUESTIONS.map(q => (
-            <div key={q.id} className="page-card p-4">
-              <p className="text-sm text-white/60 mb-3">{q.text}</p>
+            <div key={q.id} className="if-card p-4">
+              <p className="text-sm text-[var(--if-ink-soft)] mb-3">{q.text}</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map(n => (
                   <button
@@ -876,8 +867,8 @@ function DebriefScreen({ onNext }: { onNext: (scores: DebriefScores) => void }) 
                     className={cn(
                       'flex-1 h-9 rounded-lg text-sm transition-all',
                       scores[q.id as keyof typeof scores] === n
-                        ? 'bg-amber-300/20 border border-amber-300/40 text-amber-200/90'
-                        : 'bg-white/[0.03] border border-white/[0.06] text-white/30 hover:text-white/50'
+                        ? 'bg-[var(--if-accent-soft)] border border-[var(--if-accent-border)] text-[var(--if-accent)]'
+                        : 'bg-[var(--if-surface)] border border-[var(--if-line)] text-[var(--if-muted)] hover:text-[var(--if-ink-soft)]'
                     )}
                   >
                     {n}
@@ -889,9 +880,9 @@ function DebriefScreen({ onNext }: { onNext: (scores: DebriefScores) => void }) 
         </div>
 
         <div className="mb-8">
-          <label className="text-[10px] uppercase tracking-[0.15em] text-white/20 mb-2 block">关于沟通本身，我学到…（可选）</label>
+          <label className="if-field-label">关于沟通本身，我学到…（可选）</label>
           <textarea
-            className="w-full h-20 px-4 py-3 rounded-xl glass-input text-sm text-white/80 placeholder:text-white/18 outline-none resize-none"
+            className="if-field-textarea h-20"
             placeholder="例如：反对意见比我想象中更有帮助"
             value={insight}
             onChange={e => setInsight(e.target.value)}
@@ -902,7 +893,7 @@ function DebriefScreen({ onNext }: { onNext: (scores: DebriefScores) => void }) 
           onClick={() => onNext({ ...scores, insight: insight.trim() })}
           className="w-full h-12 rounded-xl btn-primary text-sm"
         >
-          查看收束总结 →
+          {brand.roundtableDebriefNext}
         </button>
       </motion.div>
     </div>
@@ -978,21 +969,21 @@ function WrapScreen({
 
   if (loading || !summary) {
     return (
-      <div className="min-h-screen flex items-center justify-center rt-scene-bg">
-        <p className="text-sm text-white/30">正在收束讨论…</p>
+      <div className="min-h-screen flex items-center justify-center if-page">
+        <p className="text-sm text-[var(--if-muted)]">{brand.roundtableSummarizing}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen rt-scene-bg px-5 py-12 max-w-md mx-auto pb-16">
+    <div className="min-h-screen if-page px-5 py-12 max-w-md mx-auto pb-16">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-200/35 mb-2">围炉收束</p>
+        <p className="if-eyebrow mb-2">{brand.roundtableWrap}</p>
         <div className="flex items-center gap-2 flex-wrap mb-2">
-          <h2 className="text-xl font-light text-white/85">{userName}，聊完了。</h2>
+          <h2 className="text-xl font-light text-[var(--if-ink)] font-display">{userName}，聊完了。</h2>
           {summary.mode === 'template' && (
-            <span className="text-[9px] text-white/28 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08]">
-              收束 · 离线模板
+            <span className="text-[9px] text-[var(--if-muted-soft)] px-2 py-0.5 rounded-md if-card--flat">
+              {brand.roundtableOfflineWrap}
             </span>
           )}
         </div>
@@ -1000,32 +991,32 @@ function WrapScreen({
 
         <div className="space-y-3 mb-8">
           {[
-            { label: '共识', text: summary.consensus, color: 'emerald' },
-            { label: '分歧', text: summary.disagreement, color: 'amber' },
-            { label: '还缺什么', text: summary.gap, color: 'white' },
+            { label: '共识', text: summary.consensus },
+            { label: '分歧', text: summary.disagreement },
+            { label: '还缺什么', text: summary.gap },
           ].map(item => (
-            <div key={item.label} className="page-card p-4">
-              <p className="text-[9px] uppercase tracking-wider text-white/25 mb-1.5">{item.label}</p>
-              <p className="text-sm text-white/65 leading-relaxed">{item.text}</p>
+            <div key={item.label} className="if-card p-4">
+              <p className="if-eyebrow mb-1.5">{item.label}</p>
+              <p className="text-sm text-[var(--if-ink-soft)] leading-relaxed">{item.text}</p>
             </div>
           ))}
         </div>
 
-        <div className="page-card p-5 mb-6 border border-amber-300/15 bg-amber-300/[0.04]">
+        <div className="if-card p-5 mb-6 border-[var(--if-accent-border)] bg-[var(--if-accent-soft)]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-amber-200/50">☯ 认领一件事</p>
+            <p className="if-field-label text-[var(--if-accent)] mb-0">☯ 认领一件事</p>
             <button
               type="button"
               onClick={handleAiAction}
               disabled={aiLoading}
-              className="text-[10px] text-amber-300/55 hover:text-amber-300/85 disabled:opacity-30"
+              className="text-[10px] text-[var(--if-accent)] hover:opacity-80 disabled:opacity-30"
             >
               {aiLoading ? '⏳…' : '🤖 AI 写行动'}
             </button>
           </div>
-          <p className="text-[11px] text-white/35 mb-2">建议：{summary.nextStep}</p>
+          <p className="text-[11px] text-[var(--if-muted)] mb-2">建议：{summary.nextStep}</p>
           <textarea
-            className="w-full h-24 px-3 py-2 rounded-xl glass-input text-sm text-white/85 placeholder:text-white/18 outline-none resize-none mb-3"
+            className="if-field-textarea h-24 mb-3"
             placeholder="14 天内我要做的一件具体的事…"
             value={action}
             onChange={e => setAction(e.target.value)}
@@ -1042,7 +1033,7 @@ function WrapScreen({
         <button
           type="button"
           onClick={() => onExport(messages, summary, debrief, action)}
-          className="w-full h-10 rounded-xl glass-light text-sm text-white/35 hover:text-white/55"
+          className="w-full h-10 rounded-xl if-btn-secondary text-sm text-[var(--if-muted)] hover:text-[var(--if-ink-soft)]"
         >
           导出完整报告 ↓
         </button>
@@ -1064,14 +1055,14 @@ function DoneScreen({
   onReset: () => void;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center rt-scene-bg px-6">
+    <div className="min-h-screen flex items-center justify-center if-page px-6">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-sm">
-        <div className="text-5xl mb-4">☯</div>
-        <h2 className="text-xl font-light text-white/85 mb-2">{userName}，这件事你领下了。</h2>
-        <p className="text-sm text-white/45 leading-relaxed mb-6 px-4">{action}</p>
-        <p className="text-[11px] text-white/25 mb-8">📅 14 天后，记得回头看一眼。</p>
+        <div className="if-mark text-3xl">☯</div>
+        <h2 className="text-xl font-light text-[var(--if-ink)] mb-2 font-display">{userName}，这件事你领下了。</h2>
+        <p className="text-sm text-[var(--if-muted)] leading-relaxed mb-6 px-4">{action}</p>
+        <p className="text-[11px] text-[var(--if-muted-soft)] mb-8">📅 14 天后，记得回头看一眼。</p>
         <button onClick={onReset} className="px-8 py-3 rounded-xl btn-primary text-sm">
-          再来一场围炉
+          {brand.roundtableAgain}
         </button>
       </motion.div>
     </div>
@@ -1081,7 +1072,7 @@ function DoneScreen({
 // ---------------------------------------------------------------------------
 // 容器 · 入场过渡
 // ---------------------------------------------------------------------------
-export function RoundtableMode() {
+export function RoundtableMode({ seedTopic = '' }: { seedTopic?: string }) {
   const [phase, setPhase] = useState<'setup' | 'table' | 'debrief' | 'wrap' | 'done'>('setup');
   const [topic, setTopic] = useState('');
   const [userName, setUserName] = useState('我');
@@ -1136,7 +1127,7 @@ ${db.insight ? `- 沟通洞察：${db.insight}` : ''}`
 **期限：** 14 天内`
       : '';
 
-    return `# 围炉群英会 — ${userName}
+    return `# ${brand.roundtableName} — ${userName}
 > ${date} · ${brand.productName}
 
 ## 话题
@@ -1171,7 +1162,7 @@ ${commitBlock}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `围炉群英会-${date}.md`;
+    a.download = `${brand.roundtableName}-${date}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1189,7 +1180,7 @@ ${commitBlock}
     <AnimatePresence mode="wait">
       {phase === 'setup' && (
         <motion.div key="setup" exit={{ opacity: 0, scale: 0.98 }}>
-          <SetupScreen onStart={handleStart} />
+          <SetupScreen onStart={handleStart} seedTopic={seedTopic} />
         </motion.div>
       )}
       {phase === 'table' && (

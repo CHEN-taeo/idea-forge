@@ -1,190 +1,241 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { brand } from '../lib/brand';
 
 interface LandingPageProps {
   connectionStatus: string;
+  initialRoomCode?: string;
   onCreateGame: (name: string, problem: string, template: 'full' | 'quick') => void;
   onJoinGame: (name: string, roomCode: string) => void;
   onHotSeat: () => void;
-  onSolo: () => void;
   onRoundtable: () => void;
+  onSpark: () => void;
 }
 
-export function LandingPage({ connectionStatus, onCreateGame, onJoinGame, onHotSeat, onSolo, onRoundtable }: LandingPageProps) {
-  const [mode, setMode] = useState<'create' | 'join' | null>(null);
+export function LandingPage({
+  connectionStatus,
+  initialRoomCode = '',
+  onCreateGame,
+  onJoinGame,
+  onHotSeat,
+  onRoundtable,
+  onSpark,
+}: LandingPageProps) {
+  const [showRoom, setShowRoom] = useState(!!initialRoomCode);
   const [showMore, setShowMore] = useState(false);
   const [playerName, setPlayerName] = useState('');
-  const [roomCode, setRoomCode] = useState('');
+  const [roomCode, setRoomCode] = useState(initialRoomCode.toUpperCase());
   const [problemStatement, setProblemStatement] = useState('');
   const [template, setTemplate] = useState<'full' | 'quick'>('quick');
 
   const connected = connectionStatus === 'connected';
+  const connecting = connectionStatus === 'connecting';
+  const isJoining = roomCode.trim().length > 0;
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm animate-scale-in page-card p-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-amber-300/[0.06] border border-amber-300/[0.08] mb-4">
-            <span className="text-xl">☯</span>
+  useEffect(() => {
+    if (initialRoomCode) {
+      setRoomCode(initialRoomCode.toUpperCase());
+      setShowRoom(true);
+    }
+  }, [initialRoomCode]);
+
+  const handleEnterRoom = () => {
+    if (!playerName.trim()) return;
+    if (isJoining) {
+      onJoinGame(playerName.trim(), roomCode.trim());
+    } else {
+      onCreateGame(playerName.trim(), problemStatement.trim(), template);
+    }
+  };
+
+  if (showRoom) {
+    return (
+      <div className="if-page px-4 py-8 max-w-md mx-auto animate-fade-in-up">
+        <button
+          type="button"
+          onClick={() => setShowRoom(false)}
+          className="text-sm text-[var(--if-muted)] hover:text-[var(--if-ink-soft)] mb-6"
+        >
+          ← 返回
+        </button>
+        <p className="if-eyebrow mb-2">{brand.roomName}</p>
+        <h2 className="font-display text-2xl text-[var(--if-ink)] mb-2">{brand.roomEntryTitle}</h2>
+        <p className="if-lead mb-6">{brand.roomEntryDesc}</p>
+
+        <div className="if-card p-5 mb-4 space-y-4">
+          <div>
+            <label className="if-field-label">你的名字</label>
+            <input
+              className="if-field-input"
+              placeholder="例如：小陈"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              autoFocus={!initialRoomCode}
+            />
           </div>
-          <h1 className="text-xl font-light text-white/80 tracking-tight">{brand.productName}</h1>
-          <p className="text-xs text-amber-200/40 mt-1">{brand.hostName} · {brand.subtitle}</p>
-          <p className="text-[11px] text-white/30 mt-2 leading-relaxed px-1">{brand.slogan}</p>
+
+          <div>
+            <label className="if-field-label">房间码</label>
+            <input
+              className="if-field-input text-center tracking-[0.2em] uppercase font-display"
+              placeholder={brand.roomCodePlaceholder}
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+              maxLength={6}
+              autoFocus={!!initialRoomCode}
+            />
+          </div>
+
+          {!isJoining ? (
+            <>
+              <div>
+                <label className="if-field-label">{brand.roomTopicLabel}</label>
+                <textarea
+                  className="if-field-textarea"
+                  placeholder="例如：Q3 优先级怎么排？"
+                  value={problemStatement}
+                  onChange={(e) => setProblemStatement(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTemplate('quick')}
+                  className={template === 'quick' ? 'if-chip if-chip--on flex-1' : 'if-chip flex-1'}
+                >
+                  <span className="block text-sm">⚡ {brand.roomModeQuick}</span>
+                  <span className="block text-[10px] opacity-70 mt-0.5">{brand.roomModeQuickHint}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplate('full')}
+                  className={template === 'full' ? 'if-chip if-chip--on flex-1' : 'if-chip flex-1'}
+                >
+                  <span className="block text-sm">🎯 {brand.roomModeFull}</span>
+                  <span className="block text-[10px] opacity-70 mt-0.5">{brand.roomModeFullHint}</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-[var(--if-muted)] leading-relaxed">
+              {brand.roomJoinHint}
+            </p>
+          )}
         </div>
 
-        {mode === null && (
-          <div className="space-y-2.5 stagger-children">
-            <button
-              onClick={() => setMode('create')}
-              disabled={!connected}
-              className="w-full h-12 rounded-xl btn-primary text-sm font-normal flex items-center justify-center gap-2 disabled:btn-disabled"
-            >
-              <span className="text-base">🔥</span>
-              发起{brand.roomName}
-              <span className="text-[10px] text-amber-200/40 ml-1">— 你投屏，大家用手机</span>
-            </button>
+        <button
+          type="button"
+          onClick={handleEnterRoom}
+          disabled={
+            !connected ||
+            !playerName.trim() ||
+            (isJoining ? !roomCode.trim() : !problemStatement.trim())
+          }
+          className="w-full min-h-12 rounded-[var(--radius)] btn-primary text-sm font-medium disabled:btn-disabled"
+        >
+          {isJoining ? brand.roomJoinButton : brand.roomHostButton}
+        </button>
 
-            <p className="text-[10px] text-white/15 text-center px-2 leading-relaxed">
-              一屏在会议室。其他人用手机。
-              静默写想法 → 一起揭晓 → 结构化讨论 → 每人认领一件事。
-            </p>
+        {!connected && (
+          <p className="text-center text-xs text-[var(--if-danger)] mt-3">请先连接服务器</p>
+        )}
+      </div>
+    );
+  }
 
-            <button
-              onClick={onSolo}
-              className="w-full h-12 rounded-xl glass-light text-sm font-normal text-white/50 hover:text-white/75 transition-colors flex items-center justify-center gap-2 border border-white/[0.06]"
-            >
-              <span className="text-base">🧠</span>
-              开始{brand.soloName}
-              <span className="text-[10px] text-white/20">— 一个人，15 分钟想明白</span>
-            </button>
+  return (
+    <div className="if-page px-4 pb-8 max-w-md mx-auto">
+      <div className="text-center pt-10 pb-6">
+        <div className="if-mark">☯</div>
+        <h1 className="font-display text-[1.65rem] text-[var(--if-ink)] tracking-tight">
+          {brand.productName}
+        </h1>
+        <p className="text-xs text-[var(--if-muted)] mt-1">
+          {brand.hostName} · {brand.subtitle}
+        </p>
+        <p className="if-lead mt-4 px-2">{brand.slogan}</p>
 
-            <button
-              onClick={onRoundtable}
-              className="w-full h-[3.25rem] rounded-xl rt-featured-btn text-sm font-normal text-white/70 flex items-center justify-center gap-2.5 group"
-            >
-              <span className="text-lg rt-float inline-block">🪑</span>
-              <span className="flex flex-col items-start leading-tight">
-                <span>围炉群英会</span>
-                <span className="text-[10px] text-amber-200/35 font-normal">请大佬入席 · 陪你聊透</span>
+        <div className="if-status-pill mt-5">
+          <span
+            className={`size-2 rounded-full mr-2 shrink-0 ${
+              connecting
+                ? 'bg-[var(--if-accent)]'
+                : connected
+                  ? 'bg-[var(--if-success)]'
+                  : 'bg-[var(--if-danger)]'
+            }`}
+          />
+          {connecting && '正在连接…'}
+          {!connecting && connected && '后端已连接'}
+          {!connecting && !connected && '未连接服务器'}
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <button
+          type="button"
+          onClick={() => setShowRoom(true)}
+          disabled={!connected}
+          className="if-mode-tile"
+        >
+          <span className="if-mode-icon">🔥</span>
+          <span className="flex-1 min-w-0 text-left">
+            <span className="block text-[0.95rem] font-medium text-[var(--if-ink)]">
+              {brand.roomEntryTitle}
+            </span>
+            <span className="block text-xs text-[var(--if-muted)] mt-0.5">
+              {brand.roomEntryDesc}
+            </span>
+          </span>
+          <span className="text-[var(--if-muted-soft)] ml-2">›</span>
+        </button>
+
+        <button type="button" onClick={onSpark} className="if-mode-tile">
+          <span className="if-mode-icon">✨</span>
+          <span className="flex-1 min-w-0 text-left">
+            <span className="block text-[0.95rem] font-medium text-[var(--if-ink)]">
+              {brand.sparkName}
+            </span>
+            <span className="block text-xs text-[var(--if-muted)] mt-0.5">
+              {brand.sparkDesc}
+            </span>
+          </span>
+          <span className="text-[var(--if-muted-soft)] ml-2">›</span>
+        </button>
+
+        <button type="button" onClick={onRoundtable} className="if-mode-tile if-mode-tile--featured">
+          <span className="if-mode-icon">🪑</span>
+          <span className="flex-1 min-w-0 text-left">
+            <span className="block text-[0.95rem] font-medium text-[var(--if-on-dark)]">
+              {brand.roundtableName}
+            </span>
+            <span className="block text-xs text-[var(--if-on-dark-muted)] mt-0.5">
+              {brand.roundtableDesc}
+            </span>
+          </span>
+          <span className="text-[rgba(250,249,245,0.4)] ml-2">›</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowMore(!showMore)}
+          className="w-full text-xs text-[var(--if-muted-soft)] py-2 mt-1"
+        >
+          {showMore ? '收起更多' : '更多模式…'}
+        </button>
+
+        {showMore && (
+          <button type="button" onClick={onHotSeat} className="if-mode-tile opacity-80">
+            <span className="if-mode-icon">🎤</span>
+            <span className="flex-1 min-w-0 text-left">
+              <span className="block text-[0.95rem] font-medium text-[var(--if-ink)]">
+                {brand.hotSeatName}
               </span>
-              <span className="ml-auto text-[10px] text-amber-300/40 group-hover:text-amber-300/70 transition-colors">新 →</span>
-            </button>
-
-            <button
-              onClick={() => setMode('join')}
-              disabled={!connected}
-              className="w-full h-10 rounded-xl text-sm font-normal text-white/30 hover:text-white/50 transition-colors disabled:opacity-20"
-            >
-              加入{brand.roomName} — 扫码或输入房间码
-            </button>
-
-            <button
-              onClick={() => setShowMore(!showMore)}
-              className="w-full text-[10px] text-white/15 hover:text-white/30 py-1"
-            >
-              {showMore ? '收起更多' : '更多模式…'}
-            </button>
-
-            {showMore && (
-              <button
-                onClick={onHotSeat}
-                className="w-full h-9 rounded-xl text-xs font-normal text-white/15 hover:text-white/30 transition-colors"
-              >
-                🎤 热座模式 — 无服务器，一屏口述讨论
-              </button>
-            )}
-
-            {!connected && (
-              <p className="text-[10px] text-red-300/40 text-center">正在连接服务器…</p>
-            )}
-          </div>
-        )}
-
-        {mode === 'create' && (
-          <div className="space-y-3 animate-fade-in-up">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">主持一场{brand.roomName}</p>
-            <input
-              className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none"
-              placeholder="你的名字"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-            />
-            <textarea
-              className="w-full h-20 px-3 py-2 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none resize-none"
-              placeholder="今天要讨论什么？例如：Q3 优先级怎么排？"
-              value={problemStatement}
-              onChange={(e) => setProblemStatement(e.target.value)}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTemplate('quick')}
-                className={template === 'quick'
-                  ? 'flex-1 h-9 rounded-lg bg-amber-300/10 border border-amber-300/25 text-amber-200/70 text-xs'
-                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}
-              >
-                ⚡ 快速 · 约 30 分钟<br />
-                <span className="text-[9px] text-white/15">构思 → 投票 → 认领</span>
-              </button>
-              <button
-                onClick={() => setTemplate('full')}
-                className={template === 'full'
-                  ? 'flex-1 h-9 rounded-lg bg-amber-300/10 border border-amber-300/25 text-amber-200/70 text-xs'
-                  : 'flex-1 h-9 rounded-lg glass-light text-white/25 text-xs hover:text-white/40 transition-colors'}
-              >
-                🎯 完整 · 约 60 分钟<br />
-                <span className="text-[9px] text-white/15">构思 → 改造 → 挑战 → 认领</span>
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setMode(null)}
-                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors"
-              >
-                返回
-              </button>
-              <button
-                onClick={() => onCreateGame(playerName, problemStatement, template)}
-                disabled={!playerName.trim() || !problemStatement.trim()}
-                className="flex-1 h-10 rounded-lg btn-primary text-sm disabled:btn-disabled"
-              >
-                创建房间
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === 'join' && (
-          <div className="space-y-3 animate-fade-in-up">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-white/20">加入{brand.roomName}</p>
-            <input
-              className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none"
-              placeholder="你的名字"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-            />
-            <input
-              className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none uppercase tracking-[0.2em] text-center"
-              placeholder="房间码"
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              maxLength={6}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => setMode(null)}
-                className="flex-1 h-10 rounded-lg text-sm text-white/20 hover:text-white/40 transition-colors"
-              >
-                返回
-              </button>
-              <button
-                onClick={() => onJoinGame(playerName, roomCode)}
-                disabled={!playerName.trim() || !roomCode.trim()}
-                className="flex-1 h-10 rounded-lg btn-primary text-sm disabled:btn-disabled"
-              >
-                加入
-              </button>
-            </div>
-          </div>
+              <span className="block text-xs text-[var(--if-muted)] mt-0.5">
+                {brand.hotSeatDesc}
+              </span>
+            </span>
+            <span className="text-[var(--if-muted-soft)] ml-2">›</span>
+          </button>
         )}
       </div>
     </div>

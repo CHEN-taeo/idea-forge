@@ -14,6 +14,8 @@ export interface Persona {
   blurb: string;
   /** 主题色（头像光晕、气泡边框） */
   color: string;
+  /** 国风色名（设计文档用） */
+  colorName?: string;
 }
 
 export const PERSONAS: Persona[] = [
@@ -85,4 +87,9 @@ export const PERSONAS: Persona[] = [
 
 export function getPersona(id: string): Persona | undefined {
   return PERSONAS.find(p => p.id === id);
+}
+
+/** 立绘 PNG 路径；文件放 public/personas/{id}.png */
+export function personaImageUrl(persona: Persona): string {
+  return `/personas/${persona.id}.png`;
 }
