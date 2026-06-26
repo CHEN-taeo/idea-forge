@@ -1,15 +1,16 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/create/create",
-    "pages/solo/solo",
+    "pages/room-entry/room-entry",
+    "pages/spark/spark",
     "pages/roundtable/roundtable",
-    "pages/join/join",
-    "pages/room/room"
+    "pages/room/room",
+    "pages/create/create",
+    "pages/join/join"
   ],
   "window": {
     "navigationBarBackgroundColor": "#faf9f5",
-    "navigationBarTitleText": "构想熔炉",
+    "navigationBarTitleText": "炉边",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#faf9f5",
     "backgroundTextStyle": "dark"

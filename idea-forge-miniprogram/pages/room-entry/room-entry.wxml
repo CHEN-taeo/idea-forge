@@ -1,0 +1,84 @@
+<view class="page">
+
+  <view class="eyebrow">{{brand.roomName}}</view>
+
+  <view class="display" style="font-size:40rpx;margin:12rpx 0 8rpx;">{{brand.roomEntryTitle}}</view>
+
+  <view class="lead" style="margin-bottom:28rpx;">{{brand.roomEntryDesc}}</view>
+
+
+
+  <view class="card card--flat">
+
+    <view class="field">
+
+      <text class="field-label">你的名字</text>
+
+      <input class="field-input" placeholder="例如：小陈" value="{{playerName}}" bindinput="onNameInput" />
+
+    </view>
+
+
+
+    <view class="field">
+
+      <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12rpx;">
+
+        <text class="field-label" style="margin-bottom:0;">房间码</text>
+
+        <text style="font-size:22rpx;color:var(--accent);" bindtap="scanCode">扫码入席</text>
+
+      </view>
+
+      <input
+
+        class="field-input"
+
+        style="text-align:center;letter-spacing:0.18em;font-family:Georgia,serif;"
+
+        placeholder="{{brand.roomCodePlaceholder}}"
+
+        value="{{roomCode}}"
+
+        bindinput="onRoomInput"
+
+        maxlength="6"
+
+      />
+
+    </view>
+
+
+
+    <block wx:if="{{!isJoining}}">
+
+      <view class="field">
+
+        <text class="field-label">{{brand.roomTopicLabel}}</text>
+
+        <textarea class="field-textarea" placeholder="例如：Q3 产品方向怎么选？" value="{{problemStatement}}" bindinput="onProblemInput" maxlength="-1" />
+
+      </view>
+
+      <view class="field-label">{{brand.roomModeLabel}}</view>
+
+      <view class="chip-row">
+
+        <view class="chip {{template === 'quick' ? 'chip--on' : ''}}" data-t="quick" bindtap="setTemplate">⚡ {{brand.roomModeQuick}}</view>
+
+        <view class="chip {{template === 'full' ? 'chip--on' : ''}}" data-t="full" bindtap="setTemplate">🎯 {{brand.roomModeFull}}</view>
+
+      </view>
+
+    </block>
+
+    <view wx:else class="lead" style="margin-top:8rpx;font-size:24rpx;">{{brand.roomJoinHint}}</view>
+
+  </view>
+
+
+
+  <view class="btn btn--primary {{submitting ? 'btn--disabled' : ''}}" bindtap="submit">{{submitLabel}}</view>
+
+</view>
+

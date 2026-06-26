@@ -1,32 +1,29 @@
-# 构想熔炉 · 微信小程序
+# 炉边 · 微信小程序
 
-暖色编辑风 UI（奶油底 + 陶土强调色 + 衬线标题），适配微信 tap 规范。
+暖色编辑风（`#faf9f5` + `#c4673a` + Georgia/Songti）。主路径：**拾念 → 名士围炉 → 落契**；次路径：**入炉**（多人）。
 
-## 运行
+## 本地开发
 
 ```bash
 # 仓库根目录
 npm run server
 ```
 
-微信开发者工具 → 导入本目录 → **不校验合法域名**
+微信开发者工具 → 导入 **`idea-forge-miniprogram/`** → 勾选 **不校验合法域名**
 
-`utils/config.js` → `SERVER_URL`（真机用局域网 IP）
+`utils/config.js` → 模拟器用 `127.0.0.1:3001`；真机用电脑局域网 IP。
 
-## 设计
+## 上传发布
 
-| Token | 值 | 用途 |
-|-------|-----|------|
-| canvas | `#faf9f5` | 页面底 |
-| card | `#efe9de` | 卡片 |
-| accent | `#c4673a` | 主按钮 / 强调 |
-| ink | `#141413` | 正文 |
-
-交互使用 `<view bindtap>` 替代原生 `button`，避免微信默认样式导致点不动、重叠。
+见 **[UPLOAD.md](./UPLOAD.md)**（配置 HTTPS、`PROD_SERVER_URL`、开发者工具上传、提审文案）。
 
 ## 页面
 
-- `index` — 模式入口（tile 列表，无重叠卡片）
-- `create` — 发起围炉（独立页）
-- `solo` / `roundtable` — AI 模式
-- `join` / `room` — 多人 Socket.IO
+| 页面 | 作用 |
+|------|------|
+| `index` | 首页入口 |
+| `spark` | 拾念 |
+| `roundtable` | 名士围炉 |
+| `room-entry` | 入炉（主持/加入） |
+| `room` | 多人围炉进行中 |
+| `create` / `join` | 重定向到 `room-entry` |

@@ -4,10 +4,12 @@ This repository is a **monorepo with two unrelated product lines**. Read this be
 
 | Product | Location | What it is |
 |---------|----------|------------|
-| **Idea Forge** (构想熔炉) | repo **root** (`/`), `idea-forge-miniprogram/` | Collaborative brainstorming game — React SPA + Express/Socket.IO + SQLite, optional Electron desktop; **WeChat mini program** |
+| **Idea Forge** (炉边) | repo **root** (`/`), `idea-forge-miniprogram/` | Collaborative brainstorming game — React SPA + Express/Socket.IO + SQLite, optional Electron desktop; **WeChat mini program** |
 | **破壳 / Poke** | `poke-mvp/`, `poke-miniprogram/`, `poke-server/` | Campus info filter → actionable cards |
 
 The two products **share no runtime code**. Confirm which product a request targets before editing.
+
+**Current focus (2026):** **炉边 / Idea Forge** only — `poke-*` is **shelved**; do not expand Poke unless explicitly requested. Primary user funnel: **拾念 → 名士围炉 → 落契**; multiplayer **入炉** is secondary.
 
 ---
 
@@ -40,6 +42,7 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 - Import alias `@/` → `src/`. shadcn/ui lives in `src/app/components/ui/`.
 - Game types: `src/app/types/game.ts`. Static data: `src/app/data/game-data.ts`.
 - Brand/copy strings: `src/app/lib/brand.ts` (driven by `VITE_BRAND_*` env). **Don't hardcode product names** — use brand helpers.
+- Visual/brand: **`docs/构想熔炉-设计语言.md`** · `src/styles/theme.css` · `public/personas/` · `FireCore.tsx`
 - UI copy is **Chinese**. Match existing tone.
 - Client AI calls split by mode:
   - **Multiplayer** (prompts, expand, round summary) → Socket.IO events via `src/app/hooks/useGameSocket.ts`
@@ -54,7 +57,18 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 - **No API key → hardcoded Chinese template fallback.** Preserve this fallback path in any AI change.
 
 ### Env (root `.env`)
-`PORT`, `VITE_SERVER_URL`, `AI_API_KEY`, `AI_API_URL`, `AI_MODEL`, `BRAND_COACH_NAME`, `VITE_BRAND_*` (HOST_NAME, SLOGAN, SUBTITLE, SOLO, ROOM, PRODUCT).
+Copy from **`.env.example`**. Key vars: `PORT`, `VITE_SERVER_URL`, `AI_API_KEY`, `AI_API_URL`, `AI_MODEL`, `BRAND_COACH_NAME`, `VITE_BRAND_*`.
+
+### Assistant / AI dev assets (repo)
+| Path | Purpose |
+|------|---------|
+| `AGENTS.md` | Architecture map (this file) |
+| `.cursor/rules/*.mdc` | Cursor rules (monorepo, frontend, backend, mini program) |
+| `.cursor/skills/idea-forge-dev/` | Dev workflow skill |
+| `docs/AI-SURFACE.md` | REST + Socket AI quick reference |
+| `docs/ASSISTANT-QUICKREF.md` | One-page「改哪里读什么」 |
+| `docs/MOBILE_E2E_CHECKLIST.md` | Mini program + web E2E |
+| `.claude/memory/projects/idea-forge.md` | Lessons (Socket ack, 127.0.0.1) |
 
 ---
 
