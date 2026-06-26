@@ -1,0 +1,14 @@
+/* Display 字体与小程序 app.wxss .display 一致 */
+
+:root {
+  --font-display: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
