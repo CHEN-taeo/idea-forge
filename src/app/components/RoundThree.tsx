@@ -70,18 +70,18 @@ export function RoundThree({
   };
 
   const scoreboard = (
-    <div className="glass px-3 py-2.5 rounded-xl">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1">积分</p>
+    <div className="if-card--flat px-3 py-2.5 rounded-xl">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1">积分</p>
       <div className="space-y-0.5 stagger-children">
         {Object.values(gameState.players)
           .sort((a, b) => b.score - a.score)
           .map((player) => (
             <div key={player.id} className="flex items-center gap-2 text-[11px]">
               <PlayerAvatar name={player.name} size="sm" />
-              <span className={cn('flex-1', player.id === currentPlayer.id ? 'text-white/70' : 'text-white/35')}>
+              <span className={cn('flex-1', player.id === currentPlayer.id ? 'text-[var(--if-ink)]' : 'text-[var(--if-muted)]')}>
                 {player.name}
               </span>
-              <span className="text-white/20 tabular-nums">{player.score}</span>
+              <span className="text-[var(--if-muted-soft)] tabular-nums">{player.score}</span>
             </div>
           ))}
       </div>
@@ -89,17 +89,17 @@ export function RoundThree({
   );
 
   const defendPanel = myIdeasUnderChallenge.length > 0 ? (
-    <div className="glass px-3 py-2.5 rounded-xl">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1.5">捍卫你的构思</p>
+    <div className="if-card--flat px-3 py-2.5 rounded-xl">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1.5">捍卫你的构思</p>
       <div className="space-y-2">
         {myIdeasUnderChallenge.map((idea) => {
           const challenge = gameState.challenges.find(c => c.ideaId === idea.id);
           const isDefending = defendingIdea === idea.id;
           return (
             <div key={idea.id} className="space-y-1.5">
-              <p className="text-[11px] text-white/50 leading-relaxed">{idea.text}</p>
+              <p className="text-[11px] text-[var(--if-ink-soft)] leading-relaxed">{idea.text}</p>
               {challenge && (
-                <p className="text-[10px] text-white/20 px-2 py-1 rounded bg-white/[0.02]">
+                <p className="text-[10px] text-[var(--if-muted-soft)] px-2 py-1 rounded bg-[var(--if-surface)]">
                   质询: {challenge.reason}
                 </p>
               )}
@@ -110,7 +110,7 @@ export function RoundThree({
                       onClick={() => setDefenseType('refute')}
                       className={cn(
                         'flex-1 px-2 py-1 rounded text-[9px] transition-all',
-                        defenseType === 'refute' ? 'btn-primary' : 'bg-white/[0.02] text-white/20'
+                        defenseType === 'refute' ? 'btn-primary' : 'bg-[var(--if-surface)] text-[var(--if-muted-soft)]'
                       )}
                     >
                       反驳
@@ -119,14 +119,14 @@ export function RoundThree({
                       onClick={() => setDefenseType('accept')}
                       className={cn(
                         'flex-1 px-2 py-1 rounded text-[9px] transition-all',
-                        defenseType === 'accept' ? 'btn-primary' : 'bg-white/[0.02] text-white/20'
+                        defenseType === 'accept' ? 'btn-primary' : 'bg-[var(--if-surface)] text-[var(--if-muted-soft)]'
                       )}
                     >
                       接受改进
                     </button>
                   </div>
                   <textarea
-                    className="w-full h-14 px-2 py-1 rounded bg-white/[0.02] text-[10px] text-white/60 placeholder:text-white/10 outline-none resize-none"
+                    className="w-full h-14 px-2 py-1 rounded bg-[var(--if-surface)] text-[10px] text-[var(--if-ink-soft)] placeholder:text-[var(--if-muted-soft)] outline-none resize-none"
                     placeholder={defenseType === 'refute' ? '回应质询…' : '如何改进…'}
                     value={defenseResponse}
                     onChange={(e) => setDefenseResponse(e.target.value)}
@@ -163,18 +163,18 @@ export function RoundThree({
   ) : null;
 
   const votePanel = defensesToVote.length > 0 ? (
-    <div className="glass px-3 py-2.5 rounded-xl">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1.5">表决</p>
+    <div className="if-card--flat px-3 py-2.5 rounded-xl">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1.5">表决</p>
       <div className="space-y-1.5">
         {defensesToVote.map((idea) => {
           const challenge = gameState.challenges.find(c => c.ideaId === idea.id);
           return (
             <div key={idea.id} className="space-y-1">
-              <p className="text-[11px] text-white/50 leading-relaxed">{idea.text}</p>
+              <p className="text-[11px] text-[var(--if-ink-soft)] leading-relaxed">{idea.text}</p>
               {challenge && (
-                <p className="text-[10px] text-white/15">质询: {challenge.reason}</p>
+                <p className="text-[10px] text-[var(--if-muted-soft)]">质询: {challenge.reason}</p>
               )}
-              <p className="text-[10px] text-white/20">回应: {idea.defenseResponse}</p>
+              <p className="text-[10px] text-[var(--if-muted-soft)]">回应: {idea.defenseResponse}</p>
               <div className="flex gap-1">
                 <button
                   onClick={() => onVoteOnDefense(idea.id, true)}
@@ -209,9 +209,9 @@ export function RoundThree({
   ) : null;
 
   const ideasPanel = (
-    <div className="glass rounded-xl overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-white/[0.04] flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">
+    <div className="if-card rounded-xl overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-[var(--if-line)] flex items-center justify-between">
+        <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">
           所有构想 · {allIdeas.length}
         </span>
       </div>
@@ -246,7 +246,7 @@ export function RoundThree({
                 {isChallenging && (
                   <div className="px-3 pb-2 space-y-1.5">
                     <textarea
-                      className="w-full h-14 px-2 py-1 rounded bg-white/[0.02] text-[10px] text-white/60 placeholder:text-white/10 outline-none resize-none"
+                      className="w-full h-14 px-2 py-1 rounded bg-[var(--if-surface)] text-[10px] text-[var(--if-ink-soft)] placeholder:text-[var(--if-muted-soft)] outline-none resize-none"
                       placeholder="这个构想的致命缺陷是…"
                       value={challengeReason}
                       onChange={(e) => setChallengeReason(e.target.value)}
@@ -271,18 +271,18 @@ export function RoundThree({
 
                 {isChallenged && challenge && (
                   <div className="px-3 pb-2 space-y-1">
-                    <div className="flex items-start gap-1.5 px-2 py-1 rounded bg-white/[0.02]">
+                    <div className="flex items-start gap-1.5 px-2 py-1 rounded bg-[var(--if-surface)]">
                       <div>
-                        <p className="text-[10px] text-white/20">{challenge.challengerName} 质询:</p>
-                        <p className="text-[10px] text-white/30">{challenge.reason}</p>
+                        <p className="text-[10px] text-[var(--if-muted-soft)]">{challenge.challengerName} 质询:</p>
+                        <p className="text-[10px] text-[var(--if-muted)]">{challenge.reason}</p>
                       </div>
                     </div>
                     {hasDefense && (
-                      <div className="flex items-start gap-1.5 px-2 py-1 rounded bg-white/[0.02]">
+                      <div className="flex items-start gap-1.5 px-2 py-1 rounded bg-[var(--if-surface)]">
                         <div>
-                          <p className="text-[10px] text-white/30">{idea.defenseResponse}</p>
+                          <p className="text-[10px] text-[var(--if-muted)]">{idea.defenseResponse}</p>
                           {idea.defenseAccepted && (
-                            <span className="text-[9px] text-white/15">已接受并改进</span>
+                            <span className="text-[9px] text-[var(--if-muted-soft)]">已接受并改进</span>
                           )}
                         </div>
                       </div>
@@ -304,18 +304,18 @@ export function RoundThree({
   ];
 
   return (
-    <div className="min-h-screen p-3 perspective-scene">
+    <div className="if-page px-3 py-4">
       <div className="max-w-3xl mx-auto animate-scale-in page-card p-4">
 
         <ProgressStepper currentPhase="r3_challenge" template={gameState.template} />
 
         <div className="text-center mb-2">
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/20">第三轮 · 挑战</span>
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--if-muted-soft)]">第三轮 · 挑战</span>
           <PhaseTimer duration={300} onExpire={() => isHost && onNextPhase()} className="ml-auto mt-1" />
         </div>
 
         {isMobile && (
-          <div className="flex gap-1 mb-3 p-1 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+          <div className="flex gap-1 mb-3 p-1 rounded-xl bg-[var(--if-surface)] border border-[var(--if-line)]">
             {mobileTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -323,8 +323,8 @@ export function RoundThree({
                 className={cn(
                   'flex-1 relative py-2 rounded-lg text-[11px] transition-colors',
                   mobileTab === tab.id
-                    ? 'bg-amber-300/12 text-amber-200/80 border border-amber-300/20'
-                    : 'text-white/30'
+                    ? 'bg-[var(--if-accent-soft)] text-[var(--if-accent)] border border-[var(--if-accent-border)]'
+                    : 'text-[var(--if-muted)]'
                 )}
               >
                 {tab.label}
@@ -342,12 +342,12 @@ export function RoundThree({
           <div className="space-y-2">
             {mobileTab === 'ideas' && ideasPanel}
             {mobileTab === 'defend' && (defendPanel || (
-              <div className="glass rounded-xl px-3 py-6 text-center text-xs text-white/20">
+              <div className="if-card--flat rounded-xl px-3 py-6 text-center text-xs text-[var(--if-muted-soft)]">
                 暂无需要答辩的构思
               </div>
             ))}
             {mobileTab === 'vote' && (votePanel || (
-              <div className="glass rounded-xl px-3 py-6 text-center text-xs text-white/20">
+              <div className="if-card--flat rounded-xl px-3 py-6 text-center text-xs text-[var(--if-muted-soft)]">
                 暂无待表决的答辩
               </div>
             ))}

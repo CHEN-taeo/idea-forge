@@ -39,7 +39,7 @@ export function ProgressStepper({ currentPhase, template = 'full' }: ProgressSte
               <div
                 className={cn(
                   'w-6 h-px mx-0.5 transition-colors duration-500',
-                  i <= activeIdx ? 'bg-white/20' : 'bg-white/[0.04]'
+                  i <= activeIdx ? 'bg-[var(--if-accent-border)]' : 'bg-[var(--if-line)]'
                 )}
               />
             )}
@@ -47,17 +47,17 @@ export function ProgressStepper({ currentPhase, template = 'full' }: ProgressSte
               <div
                 className={cn(
                   'size-1.5 rounded-full transition-all duration-300',
-                  isActive && 'bg-blue-400 scale-125',
-                  isDone && 'bg-white/30',
-                  !isActive && !isDone && 'bg-white/8'
+                  isActive && 'bg-[var(--if-accent)] scale-125',
+                  isDone && 'bg-[var(--if-muted)]',
+                  !isActive && !isDone && 'bg-[var(--if-line)]'
                 )}
               />
               <span
                 className={cn(
                   'text-[9px] transition-colors duration-300',
-                  isActive && 'text-white/50',
-                  isDone && 'text-white/20',
-                  !isActive && !isDone && 'text-white/8'
+                  isActive && 'text-[var(--if-accent)]',
+                  isDone && 'text-[var(--if-muted)]',
+                  !isActive && !isDone && 'text-[var(--if-muted-soft)]'
                 )}
               >
                 {step.label}
