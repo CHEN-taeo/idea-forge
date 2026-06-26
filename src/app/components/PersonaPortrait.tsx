@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cn } from './ui/utils';
 import type { Persona } from '../data/personas';
+import { personaImageUrl } from '../data/personas';
 
 /** 风格化立绘 SVG — 抽象 bust，非真实照片，避免肖像权问题 */
 function PortraitSvg({ id, color }: { id: string; color: string }) {
@@ -152,6 +153,10 @@ export function PersonaPortrait({
   sublabel?: string;
   className?: string;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const imageSrc = persona ? personaImageUrl(persona) : null;
+  const showImage = persona && imageSrc && !imgFailed;
+
   return (
     <div className={cn('flex flex-col items-center gap-1.5', className)}>
       <div
@@ -169,7 +174,14 @@ export function PersonaPortrait({
           ['--seat-color' as string]: `${color}66`,
         }}
       >
-        {persona ? (
+        {showImage ? (
+          <img
+            src={imageSrc}
+            alt=""
+            className="w-full h-full object-cover object-top"
+            onError={() => setImgFailed(true)}
+          />
+        ) : persona ? (
           <PortraitSvg id={persona.id} color={color} />
         ) : (
           <UserPortrait initial={userInitial ?? '我'} color={color} />

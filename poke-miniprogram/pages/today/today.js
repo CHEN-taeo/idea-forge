@@ -9,7 +9,8 @@ Page({
 
   async refresh() {
     const S = store.load();
-    const [feed, poke] = await Promise.all([api.feed(S.uid), api.poke(S.uid)]);
+    const iq = store.interestQuery(S);
+    const [feed, poke] = await Promise.all([api.feed(S.uid, iq), api.poke(S.uid, iq)]);
     const online = Array.isArray(feed);
 
     let normal, pokeArr;
@@ -31,5 +32,6 @@ Page({
 
   onAct(e) { return require('../../utils/act.js').handle(this, e); },
   goOperator() { wx.navigateTo({ url: '/pages/operator/operator' }); },
-  goForward() { wx.navigateTo({ url: '/pages/forward/forward' }); }
+  goForward() { wx.navigateTo({ url: '/pages/forward/forward' }); },
+  goRadar() { wx.switchTab({ url: '/pages/radar/radar' }); }
 });

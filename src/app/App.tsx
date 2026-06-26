@@ -7,17 +7,16 @@ import { RoundTwo } from './components/RoundTwo';
 import { RoundThree } from './components/RoundThree';
 import { CommitmentPhase } from './components/CommitmentPhase';
 import { GameFinished } from './components/GameFinished';
-import { HotSeatApp } from './components/HotSeatApp';
-import { SoloMode } from './components/SoloMode';
+import { SparkNotes } from './components/SparkNotes';
 import { RoundtableMode } from './components/RoundtableMode';
 import { ScreenView } from './components/ScreenView';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 
 export default function App() {
-  const [hotSeat, setHotSeat] = useState(false);
-  const [solo, setSolo] = useState(false);
+  const [spark, setSpark] = useState(false);
   const [roundtable, setRoundtable] = useState(false);
+  const [roundtableSeed, setRoundtableSeed] = useState('');
   const [screenMode, setScreenMode] = useState(false);
   const {
     gameState,
@@ -49,47 +48,26 @@ export default function App() {
     if (lastError) toast.error(lastError);
   }, [lastError]);
 
-  // Auto-join from QR code link (?room=XXXXXX)
-  const [qrRoomCode, setQrRoomCode] = useState<string | null>(null);
-  const [qrName, setQrName] = useState('');
+  const [inviteRoomCode, setInviteRoomCode] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const roomFromUrl = params.get('room');
-    if (roomFromUrl && connectionStatus === 'connected' && !gameState) {
-      setQrRoomCode(roomFromUrl);
+    if (roomFromUrl && !gameState) {
+      setInviteRoomCode(roomFromUrl.toUpperCase());
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [connectionStatus, gameState]);
-
-  // QR join — show name form instead of prompt()
-  if (qrRoomCode && !gameState) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-sm animate-scale-in page-card p-8 text-center">
-          <p className="text-5xl mb-4">📱</p>
-          <h2 className="text-lg font-light text-white/70 mb-1">加入围炉</h2>
-          <p className="text-xs text-white/25 mb-6">房间码 <span className="text-amber-200/60 tracking-[0.15em]">{qrRoomCode}</span></p>
-          <input
-            className="w-full h-10 px-3 rounded-lg glass-input text-sm text-white/80 placeholder:text-white/15 outline-none mb-3 text-center"
-            placeholder="你的名字"
-            value={qrName}
-            onChange={e => setQrName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && qrName.trim()) { joinGame(qrName.trim(), qrRoomCode); setQrRoomCode(null); } }}
-            autoFocus
-          />
-          <button
-            onClick={() => { joinGame(qrName.trim(), qrRoomCode); setQrRoomCode(null); }}
-            disabled={!qrName.trim()}
-            className="w-full h-10 rounded-xl btn-primary text-sm disabled:btn-disabled"
-          >
-            加入房间
-          </button>
-        </div>
-        <Toaster />
-      </div>
-    );
-  }
+    const sparkFromUrl = params.get('spark');
+    if (sparkFromUrl === '1' && !gameState) {
+      setSpark(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    const roundtableFromUrl = params.get('roundtable');
+    if (roundtableFromUrl === '1' && !gameState) {
+      setRoundtable(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [gameState]);
 
   const handleCreateGame = (playerName: string, problemStatement: string, template: 'full' | 'quick' = 'full') => {
     createGame(playerName, problemStatement, template);
@@ -103,41 +81,35 @@ export default function App() {
 
   const isHost = gameState ? gameState.hostId === currentPlayer?.id : false;
 
-  // Solo mode — one person, structured thinking
-  if (solo) {
+  const subPageBack =
+    'fixed top-4 left-4 z-50 px-3.5 py-2 rounded-xl if-btn-secondary text-xs text-[var(--if-muted)] hover:text-[var(--if-ink-soft)]';
+
+  // 拾念
+  if (spark) {
     return (
       <>
-        <button onClick={() => setSolo(false)}
-          className="fixed top-4 left-4 z-50 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/30 text-xs hover:text-white/50 transition-colors">
+        <button type="button" onClick={() => setSpark(false)} className={subPageBack}>
           ← 返回
         </button>
-        <SoloMode />
+        <SparkNotes
+          onStartRoundtable={(topic) => {
+            setRoundtableSeed(topic);
+            setSpark(false);
+            setRoundtable(true);
+          }}
+        />
       </>
     );
   }
 
-  // 围炉群英会 — 和 AI 大佬们圆桌对谈
+  // 名士围炉
   if (roundtable) {
     return (
       <>
-        <button onClick={() => setRoundtable(false)}
-          className="fixed top-4 left-4 z-50 px-3.5 py-2 rounded-xl bg-black/30 backdrop-blur-md border border-white/[0.08] text-white/40 text-xs hover:text-white/65 hover:border-white/[0.14] transition-all">
-          ← 离开围炉
+        <button type="button" onClick={() => { setRoundtable(false); setRoundtableSeed(''); }} className={subPageBack}>
+          ← 回炉边
         </button>
-        <RoundtableMode />
-      </>
-    );
-  }
-
-  // Hot Seat mode
-  if (hotSeat) {
-    return (
-      <>
-        <button onClick={() => setHotSeat(false)}
-          className="fixed top-4 left-4 z-50 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/30 text-xs hover:text-white/50 transition-colors">
-          ← 返回
-        </button>
-        <HotSeatApp />
+        <RoundtableMode seedTopic={roundtableSeed} />
       </>
     );
   }
@@ -147,10 +119,13 @@ export default function App() {
       <>
         <LandingPage
           connectionStatus={connectionStatus}
+          initialRoomCode={inviteRoomCode}
           onCreateGame={handleCreateGame}
-          onJoinGame={handleJoinGame}
-          onHotSeat={() => setHotSeat(true)}
-          onSolo={() => setSolo(true)}
+          onJoinGame={(name, code) => {
+            handleJoinGame(name, code);
+            setInviteRoomCode('');
+          }}
+          onSpark={() => setSpark(true)}
           onRoundtable={() => setRoundtable(true)}
         />
         <Toaster />

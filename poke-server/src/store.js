@@ -78,6 +78,19 @@ function addItem(it) {
 function items() { return db().items.slice(); }
 function raw() { return db().raw.slice(); }
 
+function getItem(id) {
+  return db().items.find(it => it.id === id) || null;
+}
+
+function updateItem(id, patch) {
+  const d = db();
+  const i = d.items.findIndex(it => it.id === id);
+  if (i < 0) return null;
+  d.items[i] = Object.assign({}, d.items[i], patch);
+  persist();
+  return d.items[i];
+}
+
 function reset() {
   cache = { raw: [], items: [], engage: {}, seq: 0 };
   persist();
@@ -115,12 +128,14 @@ function mineState(itemId, uid) {
   const b = d.engage[itemId] || { go: {}, buddy: {}, attended: {} };
   return { go: !!b.go[uid], buddy: !!b.buddy[uid], attended: !!b.attended[uid] };
 }
-function enrich(it, uid) {
+function enrich(it, uid, gapOpts) {
+  const gap = require('./gap');
   const c = counts(it.id);
-  return Object.assign({}, it, {
+  const base = Object.assign({}, it, {
     goN: c.goN, bdN: c.bdN, atN: c.atN, buddyNames: c.buddyNames,
     mine: uid ? mineState(it.id, uid) : { go: false, buddy: false, attended: false }
   });
+  return gap.withGap(base, uid, gapOpts);
 }
 function myItemIds(uid) {
   const d = db();
@@ -132,5 +147,6 @@ function myItemIds(uid) {
 
 module.exports = {
   db, persist, addRaw, addItem, items, raw, reset, recentDuplicate, normalize,
+  getItem, updateItem,
   setEngage, counts, mineState, enrich, myItemIds
 };
