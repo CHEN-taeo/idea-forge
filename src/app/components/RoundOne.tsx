@@ -54,13 +54,13 @@ export function RoundOne({
   const phaseLabel = isSubmitPhase ? '构思' : '竞猜';
 
   return (
-    <div className="min-h-screen p-3 perspective-scene">
+    <div className="if-page px-3 py-4">
       <div className="max-w-3xl mx-auto animate-scale-in page-card p-4">
 
         <ProgressStepper currentPhase={phase} template={gameState.template} />
 
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/20">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--if-muted-soft)]">
             第一轮 · {phaseLabel}
           </span>
           {isSubmitPhase && !myIdea && (
@@ -73,11 +73,11 @@ export function RoundOne({
           {/* Sidebar */}
           <div className="space-y-2">
             {/* Role */}
-            <div className="glass px-3 py-2.5 rounded-xl">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1">角色</p>
-              <p className="text-xs text-white/60">{currentPlayer.role ? ROLE_LABELS[currentPlayer.role] : ''}</p>
+            <div className="if-card--flat px-3 py-2.5 rounded-xl">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1">角色</p>
+              <p className="text-xs text-[var(--if-ink-soft)]">{currentPlayer.role ? ROLE_LABELS[currentPlayer.role] : ''}</p>
               {currentPlayer.role && ROLE_DESCRIPTIONS[currentPlayer.role] && (
-                <p className="text-[11px] text-white/25 mt-0.5 leading-relaxed">
+                <p className="text-[11px] text-[var(--if-muted)] mt-0.5 leading-relaxed">
                   {ROLE_DESCRIPTIONS[currentPlayer.role]}
                 </p>
               )}
@@ -85,8 +85,8 @@ export function RoundOne({
 
             {/* Inspiration */}
             {isSubmitPhase && (
-              <div className="glass px-3 py-2.5 rounded-xl">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1.5">灵感卡</p>
+              <div className="if-card--flat px-3 py-2.5 rounded-xl">
+                <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1.5">灵感卡</p>
                 <div className="space-y-1">
                   {currentPlayer.inspirationCards.map((cardIndex) => (
                     <button
@@ -95,8 +95,8 @@ export function RoundOne({
                       className={cn(
                         'w-full p-2 text-left rounded-lg text-[11px] leading-relaxed transition-all duration-200 card-hover',
                         selectedCard === cardIndex
-                          ? 'card-selected text-white/80'
-                          : 'text-white/35'
+                          ? 'card-selected text-[var(--if-ink)]'
+                          : 'text-[var(--if-muted)]'
                       )}
                     >
                       {INSPIRATION_CARDS[cardIndex]}
@@ -107,18 +107,18 @@ export function RoundOne({
             )}
 
             {/* Scoreboard */}
-            <div className="glass px-3 py-2.5 rounded-xl">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1">积分</p>
+            <div className="if-card--flat px-3 py-2.5 rounded-xl">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1">积分</p>
               <div className="space-y-0.5 stagger-children">
                 {Object.values(gameState.players)
                   .sort((a, b) => b.score - a.score)
                   .map((player) => (
                     <div key={player.id} className="flex items-center gap-2 text-[11px]">
                       <PlayerAvatar name={player.name} size="sm" />
-                      <span className={cn('flex-1', player.id === currentPlayer.id ? 'text-white/70' : 'text-white/35')}>
+                      <span className={cn('flex-1', player.id === currentPlayer.id ? 'text-[var(--if-ink)]' : 'text-[var(--if-muted)]')}>
                         {player.name}
                       </span>
-                      <span className="text-white/20 tabular-nums">{player.score}</span>
+                      <span className="text-[var(--if-muted-soft)] tabular-nums">{player.score}</span>
                     </div>
                   ))}
               </div>
@@ -143,15 +143,15 @@ export function RoundOne({
 
             {/* Submit */}
             {isSubmitPhase && !myIdea && (
-              <div className="glass px-3 py-2.5 rounded-xl animate-fade-in-up">
+              <div className="if-card--flat px-3 py-2.5 rounded-xl animate-fade-in-up">
                 <textarea
-                  className="w-full h-16 px-0 py-1 bg-transparent text-xs text-white/80 placeholder:text-white/15 outline-none resize-none"
+                  className="w-full h-16 px-0 py-1 bg-transparent text-xs text-[var(--if-ink)] placeholder:text-[var(--if-muted-soft)] outline-none resize-none"
                   placeholder="写下你的构想…"
                   value={ideaText}
                   onChange={(e) => setIdeaText(e.target.value)}
                 />
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-white/15">
+                  <span className="text-[10px] text-[var(--if-muted-soft)]">
                     {selectedCard !== null ? '已选择灵感卡' : '请先选择灵感卡'}
                   </span>
                   <button
@@ -167,16 +167,16 @@ export function RoundOne({
 
             {/* Submitted */}
             {isSubmitPhase && myIdea && (
-              <div className="glass px-3 py-2.5 rounded-xl">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-white/20 mb-1">我的构思</p>
-                <p className="text-xs text-white/60 leading-relaxed">{myIdea.text}</p>
+              <div className="if-card--flat px-3 py-2.5 rounded-xl">
+                <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)] mb-1">我的构思</p>
+                <p className="text-xs text-[var(--if-ink-soft)] leading-relaxed">{myIdea.text}</p>
               </div>
             )}
 
             {/* Ideas list */}
-            <div className="glass rounded-xl overflow-hidden">
-              <div className="px-3 py-2.5 border-b border-white/[0.04] flex items-center justify-between">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">
+            <div className="if-card rounded-xl overflow-hidden">
+              <div className="px-3 py-2.5 border-b border-[var(--if-line)] flex items-center justify-between">
+                <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">
                   所有构思 · {roundOneIdeas.length}
                 </span>
               </div>
@@ -200,8 +200,8 @@ export function RoundOne({
                               className={cn(
                                 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-all duration-200 flex-shrink-0',
                                 idea.votes > 0
-                                  ? 'bg-white/[0.04] text-white/15'
-                                  : 'bg-white/[0.04] text-white/30 hover:bg-white/8 hover:text-white/50'
+                                  ? 'bg-[var(--if-surface)] text-[var(--if-muted-soft)]'
+                                  : 'bg-[var(--if-surface)] text-[var(--if-muted)] hover:bg-[var(--if-accent-soft)] hover:text-[var(--if-ink-soft)]'
                               )}
                             >
                               <svg className="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -222,8 +222,8 @@ export function RoundOne({
                                 className={cn(
                                   'px-2 py-0.5 rounded text-[10px] transition-all duration-200',
                                   guesses[idea.id] === player.id
-                                    ? 'bg-white/8 text-white/60'
-                                    : 'bg-white/[0.02] text-white/20 hover:bg-white/5 hover:text-white/35'
+                                    ? 'bg-[var(--if-accent-soft)] text-[var(--if-ink-soft)]'
+                                    : 'bg-[var(--if-surface)] text-[var(--if-muted-soft)] hover:bg-[var(--if-card-strong)] hover:text-[var(--if-muted)]'
                                 )}
                               >
                                 {player.name}

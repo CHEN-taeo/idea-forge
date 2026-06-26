@@ -6,6 +6,7 @@ import { PlayerAvatar } from './PlayerAvatar';
 import { IdeaCard } from './IdeaCard';
 import { cn } from './ui/utils';
 import confetti from 'canvas-confetti';
+import { brand } from '../lib/brand';
 
 interface GameFinishedProps {
   gameState: GameState;
@@ -24,7 +25,11 @@ export function GameFinished({
   const winner = sortedPlayers[0];
   const survivingIdeas = gameState.ideas.filter(i => i.alive);
   const mvpIdea = [...survivingIdeas].sort((a, b) => b.votes - a.votes)[0];
-  const podiumColors = ['glass-gold', 'glass-silver', 'glass-bronze'];
+  const podiumColors = [
+    'if-card--flat bg-[var(--if-accent-soft)] border-[var(--if-accent-border)]',
+    'if-card--flat',
+    'if-card--flat',
+  ];
 
   // Challenge-resilient ideas: challenged AND (successfully defended OR defense accepted)
   const battleTestedIdeas = survivingIdeas.filter(
@@ -72,7 +77,7 @@ export function GameFinished({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `构想熔炉-会议报告-${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `${brand.productName}-会议报告-${new Date().toISOString().split('T')[0]}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -80,7 +85,7 @@ export function GameFinished({
   };
 
   return (
-    <div className="min-h-screen p-3 perspective-scene">
+    <div className="if-page px-3 py-4">
       <div className="max-w-xl mx-auto animate-scale-in page-card p-4">
 
         <ProgressStepper currentPhase="finished" template={gameState.template} />
@@ -89,10 +94,10 @@ export function GameFinished({
         {(gameState.commitments?.length ?? 0) > 0 && (
           <div className="mb-5 pt-2">
             <div className="flex items-baseline justify-between mb-3 px-0.5">
-              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-emerald-300/55">
+              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-[var(--if-success)]">
                 ✓ 团队承诺
               </span>
-              <span className="text-[11px] text-white/25">
+              <span className="text-[11px] text-[var(--if-muted)]">
                 {gameState.commitments!.length} 项行动
               </span>
             </div>
@@ -100,12 +105,12 @@ export function GameFinished({
               {gameState.commitments!.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-start gap-2.5 bg-emerald-400/[0.04] border border-emerald-400/10 rounded-xl p-3"
+                  className="flex items-start gap-2.5 bg-[rgba(45,106,79,0.06)] border border-[rgba(45,106,79,0.2)] rounded-xl p-3"
                 >
                   <PlayerAvatar name={c.playerName} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-white/35 mb-0.5">{c.playerName}</p>
-                    <p className="text-xs text-white/70 leading-relaxed">{c.action}</p>
+                    <p className="text-[11px] text-[var(--if-muted)] mb-0.5">{c.playerName}</p>
+                    <p className="text-xs text-[var(--if-ink)] leading-relaxed">{c.action}</p>
                   </div>
                 </div>
               ))}
@@ -114,17 +119,17 @@ export function GameFinished({
         )}
 
         {(gameState.commitments?.length ?? 0) > 0 && (
-          <div className="border-t border-white/[0.04] mb-5" />
+          <div className="border-t border-[var(--if-line)] mb-5" />
         )}
 
         {/* Results recap */}
         <div className="text-center mb-5">
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/20 mb-2 block">本次会议成果</span>
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--if-muted-soft)] mb-2 block">本次会议成果</span>
           <div className="flex items-center justify-center gap-2 mb-1">
             <PlayerAvatar name={winner.name} size="lg" />
           </div>
-          <p className="text-lg font-light text-white/70">{winner.name}</p>
-          <p className="text-2xl font-light text-white/40 mt-0.5 animate-score-pop">{winner.score}</p>
+          <p className="text-lg font-light text-[var(--if-ink)]">{winner.name}</p>
+          <p className="text-2xl font-light text-[var(--if-muted)] mt-0.5 animate-score-pop">{winner.score}</p>
         </div>
 
         {/* Podium Standings */}
@@ -134,27 +139,27 @@ export function GameFinished({
               key={player.id}
               className={cn(
                 'px-3 py-2.5 flex items-center justify-between',
-                podiumColors[index] || 'glass'
+                podiumColors[index] || 'if-card--flat'
               )}
             >
               <div className="flex items-center gap-2">
                 <span className={cn(
                   'text-xs tabular-nums w-5',
-                  index === 0 ? 'text-amber-400/60' : index === 1 ? 'text-slate-400/50' : 'text-orange-400/40'
+                  index === 0 ? 'text-[var(--if-accent)]' : index === 1 ? 'text-[var(--if-muted)]' : 'text-[var(--if-muted-soft)]'
                 )}>
                   {index + 1}
                 </span>
                 <PlayerAvatar name={player.name} size="sm" />
                 <span className={cn(
                   'text-xs',
-                  index === 0 ? 'text-white/70' : 'text-white/40'
+                  index === 0 ? 'text-[var(--if-ink)]' : 'text-[var(--if-muted)]'
                 )}>
                   {player.name}
                 </span>
               </div>
               <span className={cn(
                 'text-xs tabular-nums animate-score-pop',
-                index === 0 ? 'text-white/50' : 'text-white/20'
+                index === 0 ? 'text-[var(--if-ink-soft)]' : 'text-[var(--if-muted-soft)]'
               )}>
                 {player.score}
               </span>
@@ -164,16 +169,16 @@ export function GameFinished({
 
         {/* Rest of standings */}
         {sortedPlayers.length > 3 && (
-          <div className="glass rounded-xl overflow-hidden mb-2.5">
+          <div className="if-card rounded-xl overflow-hidden mb-2.5">
             <div className="divide-y divide-white/[0.03] stagger-children">
               {sortedPlayers.slice(3).map((player, index) => (
                 <div key={player.id} className="flex items-center justify-between px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-white/12 w-5">{index + 4}</span>
+                    <span className="text-[11px] text-[var(--if-muted-soft)] w-5">{index + 4}</span>
                     <PlayerAvatar name={player.name} size="sm" />
-                    <span className="text-xs text-white/35">{player.name}</span>
+                    <span className="text-xs text-[var(--if-muted)]">{player.name}</span>
                   </div>
-                  <span className="text-[11px] text-white/15">{player.score}</span>
+                  <span className="text-[11px] text-[var(--if-muted-soft)]">{player.score}</span>
                 </div>
               ))}
             </div>
@@ -182,27 +187,27 @@ export function GameFinished({
 
         {/* MVP */}
         {mvpIdea && (
-          <div className="glass rounded-xl overflow-hidden mb-2.5">
+          <div className="if-card rounded-xl overflow-hidden mb-2.5">
             <div className="px-3 py-2.5 border-b border-white/[0.04]">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">最佳构想</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">最佳构想</span>
             </div>
             <div className="px-3 py-2.5">
-              <p className="text-xs text-white/60 leading-relaxed">{mvpIdea.text}</p>
+              <p className="text-xs text-[var(--if-ink-soft)] leading-relaxed">{mvpIdea.text}</p>
               <div className="flex items-center gap-3 mt-1.5">
-                <span className="text-[10px] text-white/20 flex items-center gap-1">
+                <span className="text-[10px] text-[var(--if-muted-soft)] flex items-center gap-1">
                   <PlayerAvatar name={gameState.players[mvpIdea.authorId]?.name || ''} size="sm" />
                   {gameState.players[mvpIdea.authorId]?.name}
                 </span>
-                <span className="text-[10px] text-white/12">{mvpIdea.votes} 票</span>
+                <span className="text-[10px] text-[var(--if-muted-soft)]">{mvpIdea.votes} 票</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Survivors */}
-        <div className="glass rounded-xl overflow-hidden mb-2.5">
+        <div className="if-card rounded-xl overflow-hidden mb-2.5">
           <div className="px-3 py-2.5 border-b border-white/[0.04]">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">
               存活的构想 · {survivingIdeas.length}
             </span>
           </div>
@@ -221,7 +226,7 @@ export function GameFinished({
         </div>
 
         {/* Stats */}
-        <div className="glass rounded-xl mb-2.5">
+        <div className="if-card rounded-xl mb-2.5">
           <div className="grid grid-cols-5 divide-x divide-white/[0.03]">
             {[
               { label: '总计', value: gameState.ideas.length },
@@ -231,8 +236,8 @@ export function GameFinished({
               { label: '经考验', value: battleTestedIdeas.length },
             ].map((stat, i) => (
               <div key={i} className="px-2 py-2.5 text-center">
-                <p className="text-lg font-light text-white/40">{stat.value}</p>
-                <p className="text-[8px] text-white/12">{stat.label}</p>
+                <p className="text-lg font-light text-[var(--if-muted)]">{stat.value}</p>
+                <p className="text-[8px] text-[var(--if-muted-soft)]">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -240,23 +245,23 @@ export function GameFinished({
 
         {/* Round Bests */}
         {(r1Best || r2Best) && (
-          <div className="glass rounded-xl overflow-hidden mb-2.5">
+          <div className="if-card rounded-xl overflow-hidden mb-2.5">
             <div className="px-3 py-2.5 border-b border-white/[0.04]">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">每轮最佳</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">每轮最佳</span>
             </div>
             <div className="divide-y divide-white/[0.03]">
               {r1Best && (
                 <div className="px-3 py-2">
-                  <span className="text-[9px] text-white/12 mb-1 block">R1 · 最高票数</span>
-                  <p className="text-[11px] text-white/50 leading-relaxed">{r1Best.text}</p>
-                  <span className="text-[10px] text-white/15">{r1Best.votes} 票</span>
+                  <span className="text-[9px] text-[var(--if-muted-soft)] mb-1 block">R1 · 最高票数</span>
+                  <p className="text-[11px] text-[var(--if-ink-soft)] leading-relaxed">{r1Best.text}</p>
+                  <span className="text-[10px] text-[var(--if-muted-soft)]">{r1Best.votes} 票</span>
                 </div>
               )}
               {r2Best && (
                 <div className="px-3 py-2">
-                  <span className="text-[9px] text-white/12 mb-1 block">R2 · 最佳改造</span>
-                  <p className="text-[11px] text-white/50 leading-relaxed">{r2Best.text}</p>
-                  <span className="text-[10px] text-white/15">
+                  <span className="text-[9px] text-[var(--if-muted-soft)] mb-1 block">R2 · 最佳改造</span>
+                  <p className="text-[11px] text-[var(--if-ink-soft)] leading-relaxed">{r2Best.text}</p>
+                  <span className="text-[10px] text-[var(--if-muted-soft)]">
                     {r2Best.endorsed ? '已获原作者认可' : `${r2Best.votes} 票`}
                   </span>
                 </div>
@@ -267,14 +272,14 @@ export function GameFinished({
 
         {/* AI Round Analysis */}
         {onAiRoundSummary && (
-          <div className="glass rounded-xl overflow-hidden mb-2.5">
+          <div className="if-card rounded-xl overflow-hidden mb-2.5">
             <div className="px-3 py-2.5 border-b border-white/[0.04] flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">AI 分析</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--if-muted-soft)]">AI 分析</span>
               {!aiSummary && (
                 <button
                   onClick={handleAiSummary}
                   disabled={aiSummaryLoading}
-                  className="text-[10px] text-amber-300/50 hover:text-amber-300/80 transition-colors disabled:opacity-30"
+                  className="text-[10px] text-[var(--if-accent)] hover:opacity-80 transition-colors disabled:opacity-30"
                 >
                   {aiSummaryLoading ? '⏳ 分析中…' : '🤖 生成分析'}
                 </button>
@@ -282,7 +287,7 @@ export function GameFinished({
             </div>
             {aiSummary && (
               <div className="px-3 py-3">
-                <p className="text-[11px] text-white/45 leading-relaxed whitespace-pre-wrap">{aiSummary}</p>
+                <p className="text-[11px] text-[var(--if-muted)] leading-relaxed whitespace-pre-wrap">{aiSummary}</p>
               </div>
             )}
           </div>
@@ -292,7 +297,7 @@ export function GameFinished({
         <div className="flex gap-2 mb-2.5">
           <button
             onClick={handlePlayAgain}
-            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl glass-light text-xs text-white/40 hover:text-white/60 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl if-btn-secondary text-xs text-[var(--if-muted)] hover:text-[var(--if-ink-soft)] transition-colors"
           >
             <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M1 4v6h6" />

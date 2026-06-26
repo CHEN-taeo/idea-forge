@@ -83,11 +83,11 @@ export function PhaseTimer({
       aria-label={`剩余时间 ${display}`}
     >
       <svg className={cn(svgSize, '-rotate-90')} viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+        <circle cx="12" cy="12" r="10" fill="none" stroke="var(--if-line)" strokeWidth="2" />
         <circle
           cx="12" cy="12" r="10"
           fill="none"
-          stroke={isUrgent ? 'rgba(248,113,113,0.85)' : 'rgba(251,191,36,0.55)'}
+          stroke={isUrgent ? 'var(--if-danger)' : 'var(--if-accent)'}
           strokeWidth={isCritical ? 3 : 2}
           strokeLinecap="round"
           strokeDasharray={Math.PI * 20}
@@ -99,8 +99,8 @@ export function PhaseTimer({
         className={cn(
           'tabular-nums font-mono transition-colors',
           textSize,
-          isUrgent ? 'text-red-400 font-medium' : 'text-white/30',
-          isCritical && 'animate-pulse text-red-300'
+          isUrgent ? 'text-[var(--if-danger)] font-medium' : 'text-[var(--if-muted)]',
+          isCritical && 'animate-pulse text-[var(--if-danger)]'
         )}
       >
         {display}

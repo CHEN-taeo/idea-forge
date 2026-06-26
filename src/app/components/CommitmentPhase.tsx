@@ -23,19 +23,17 @@ export function CommitmentPhase({
   const survivingCount = gameState.ideas.filter(i => i.alive).length;
 
   return (
-    <div className="min-h-screen p-3 perspective-scene">
+    <div className="if-page px-3 py-4">
       <div className="max-w-xl mx-auto animate-scale-in page-card p-4">
         <ProgressStepper currentPhase="commitment" template={gameState.template} />
 
         <div className="text-center mb-4 pt-1">
-          <span className="text-[10px] uppercase tracking-[0.25em] text-amber-300/40">
-            决策时刻
-          </span>
-          <h2 className="text-lg font-light text-white/75 mt-1">认领一件你要负责的事</h2>
-          <p className="text-xs text-white/25 mt-1 leading-relaxed px-2">
+          <span className="if-eyebrow">决策时刻</span>
+          <h2 className="text-lg font-light text-[var(--if-ink)] mt-1 font-display">认领一件你要负责的事</h2>
+          <p className="text-xs text-[var(--if-muted)] mt-1 leading-relaxed px-2">
             {gameState.problemStatement}
           </p>
-          <p className="text-[10px] text-white/15 mt-2">
+          <p className="text-[10px] text-[var(--if-muted-soft)] mt-2">
             {survivingCount} 个存活构想 · {commitments.length}/{totalPlayers} 人已认领
           </p>
         </div>
@@ -56,7 +54,7 @@ export function CommitmentPhase({
         {isHost && (
           <button
             onClick={onNextPhase}
-            className="w-full mt-4 h-10 rounded-xl glass-light text-xs text-white/40 hover:text-white/60 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full mt-4 h-10 rounded-xl if-btn-secondary text-xs text-[var(--if-muted)] hover:text-[var(--if-ink-soft)] transition-colors flex items-center justify-center gap-1.5"
           >
             查看会议总结
             <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -66,21 +64,21 @@ export function CommitmentPhase({
         )}
 
         {!isHost && (
-          <p className="text-center text-[10px] text-white/15 mt-4">
+          <p className="text-center text-[10px] text-[var(--if-muted-soft)] mt-4">
             等待主持人结束承诺环节…
           </p>
         )}
 
         {commitments.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-white/[0.04]">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-white/15 mb-2">团队承诺一览</p>
+          <div className="mt-5 pt-4 border-t border-[var(--if-line)]">
+            <p className="if-eyebrow mb-2">团队承诺一览</p>
             <div className="space-y-1.5">
               {commitments.map((c) => (
-                <div key={c.id} className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-white/[0.02]">
+                <div key={c.id} className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-[var(--if-surface)]">
                   <PlayerAvatar name={c.playerName} size="sm" />
                   <div className="min-w-0">
-                    <p className="text-[10px] text-white/30">{c.playerName}</p>
-                    <p className="text-[11px] text-white/55 leading-relaxed">{c.action}</p>
+                    <p className="text-[10px] text-[var(--if-muted)]">{c.playerName}</p>
+                    <p className="text-[11px] text-[var(--if-ink-soft)] leading-relaxed">{c.action}</p>
                   </div>
                 </div>
               ))}
