@@ -1,20 +1,15 @@
 <template name="card">
   <view class="card {{c.poke ? 'poke' : ''}}">
-    <view class="gaprow" wx:if="{{c.gapReasons.length || c.insiderNote}}">
-      <view wx:for="{{c.gapReasons}}" wx:key="*this" class="gapchip gap-{{index}}">{{item}}</view>
-      <view wx:if="{{c.insiderNote}}" class="gapchip gap-insider">💎 内幕</view>
-    </view>
     <view class="chiprow">
-      <view class="chip cat {{c.poke ? 'poke' : ''}}">{{c.poke ? '🌱 ' : ''}}{{c.eventType || c.cat}}</view>
+      <view class="chip cat {{c.poke ? 'poke' : ''}}">{{c.poke ? '🌱 ' : ''}}{{c.cat}}</view>
       <view wx:for="{{c.tags}}" wx:key="*this" class="chip">{{item}}</view>
     </view>
     <view class="h3">{{c.title}}</view>
     <view class="summary">{{c.summary}}</view>
-    <view wx:if="{{c.insiderNote}}" class="insider">💎 {{c.insiderNote}}<text class="insider-disclaimer"> · 个人体验，仅供参考</text></view>
     <view class="meta">
       <text wx:if="{{c.time}}">🕒 {{c.time}}</text>
       <text wx:if="{{c.place}}">📍 {{c.place}}</text>
-      <text wx:if="{{c.deadline}}" class="dl dl-{{c.deadlineTier || 'unknown'}}">⏰ {{c.deadline}}</text>
+      <text wx:if="{{c.deadline}}" class="dl">⏰ {{c.deadline}}</text>
       <text wx:if="{{c.price}}">💰 {{c.price}}</text>
     </view>
     <view wx:if="{{c.pokeReason}}" class="pokereason">🌱 {{c.pokeReason}}</view>
@@ -22,7 +17,6 @@
     <view class="actions">
       <view class="btn btn-go {{c.go ? 'on' : ''}}" data-id="{{c.id}}" data-act="go" bindtap="onAct">{{c.go ? '✓ 已想去' : '想去 +1'}}</view>
       <view class="btn btn-buddy {{c.buddy ? 'on' : ''}}" data-id="{{c.id}}" data-act="buddy" bindtap="onAct">{{c.buddy ? '✓ 找搭子中' : '找搭子'}}</view>
-      <view class="btn btn-share" data-id="{{c.id}}" data-act="share" bindtap="onAct">分享</view>
     </view>
     <view wx:if="{{c.buddy}}" class="buddies">
       <block wx:if="{{c.names.length}}">一起的：<text wx:for="{{c.names}}" wx:key="*this" class="who">{{item}}</text></block>

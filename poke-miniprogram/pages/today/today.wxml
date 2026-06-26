@@ -34,8 +34,6 @@
 
   <view wx:else class="empty">
     <view class="big">🐣</view>今天还没有内容
-    <view class="small">粘贴一条班委群消息到「导入」，30 秒后出现信息差</view>
+    <view class="small">点右上角「运营」录入今天值得做的 3 件事</view>
   </view>
-
-  <view wx:if="{{online}}" class="ghost linkbar" bindtap="goRadar">查看本周全部活动 →</view>
 </view>

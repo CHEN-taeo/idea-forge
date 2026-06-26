@@ -31,7 +31,6 @@
   </view>
 
   <view class="primary" data-id="__new" bindtap="openEdit">＋ 新增一条</view>
-  <view class="ghost" bindtap="goInsider">💎 服务端内幕标注</view>
   <view class="ghost" bindtap="resetData">重置为示例数据</view>
 </view>
 

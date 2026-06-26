@@ -6,9 +6,7 @@
     "pages/reflect/reflect",
     "pages/mine/mine",
     "pages/operator/operator",
-    "pages/forward/forward",
-    "pages/insider/insider",
-    "pages/share/share"
+    "pages/forward/forward"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f1117",

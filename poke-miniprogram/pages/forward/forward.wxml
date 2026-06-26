@@ -1,11 +1,11 @@
 <view class="wrap">
-  <view class="lead">把<strong>班委群 / 社团群 / 峰会海报</strong>文字贴进来，或从 Tabbit「破壳投喂」复制。讲座、竞赛、展览、内推都会自动结构化。</view>
+  <view class="lead">从微信复制真实内容，或开启 wechat-cli 后把群消息「转发」到文件传输助手，会自动进破壳。</view>
   <view class="field">
     <text class="label">来源（可选）</text>
-    <input class="inp" value="{{room}}" bindinput="onRoom" placeholder="班委群 / 社团群 / 文件传输助手" />
+    <input class="inp" value="{{room}}" bindinput="onRoom" placeholder="文件传输助手 / 班级群名" />
   </view>
   <textarea class="ta" value="{{text}}" bindinput="onText" auto-height maxlength="-1"
-    placeholder="粘贴活动信息…&#10;例如：&#10;【破壳投喂】峰会报名 6月30日截止&#10;某某讲座今晚7点三教&#10;黑客松招募队友" />
-  <view class="primary" bindtap="submit">{{loading ? 'AI 整理中…' : '导入 → 信息差雷达'}}</view>
-  <view class="hint">导入后回到「今天」或「机会」下拉刷新。噪音（在吗/哈哈）会自动丢掉。</view>
+    placeholder="粘贴从微信复制的真实消息…&#10;例如：&#10;找搭子&#10;某某讲座今晚7点三教&#10;国家奖学金截止周四" />
+  <view class="primary" bindtap="submit">{{loading ? 'AI 整理中…' : '导入 → AI 整理'}}</view>
+  <view class="hint">导入后回到「今天」下拉刷新即可看到真实卡片。噪音（在吗/哈哈）会自动丢掉。</view>
 </view>

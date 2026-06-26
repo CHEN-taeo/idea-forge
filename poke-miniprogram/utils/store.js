@@ -52,27 +52,18 @@ function migrate(r) {
   r.reflect = r.reflect || {};
   r.log = r.log || { goClicks: 0, buddyClicks: 0 };
   r.meName = r.meName || '我';
-  r.uid = r.uid || genUid();
-  r.cache = r.cache || {};
-  r.interests = r.interests || []; // 关注方向：竞赛/创业/展览/讲座/专业相关/机会嗅探
+  r.uid = r.uid || genUid(); // 本设备唯一 id，用于后端多人计数
+  r.cache = r.cache || {}; // 后端拉来的 item 缓存（id -> item），供 我的/复盘 解析
   return r;
 }
 
-function interestQuery(S) {
-  return (S.interests && S.interests.length) ? { interests: S.interests.join(',') } : {};
-}
-
-// 把「后端富化过的 item」映射成卡片视图
+// 把「后端富化过的 item」(含 goN/bdN/mine/buddyNames) 映射成卡片视图
 function serverCardVM(it) {
   const m = it.mine || { go: false, buddy: false, attended: false };
-  const gapReasons = (it.gapReasons || []).map(r => (typeof r === 'string' ? r : r.label)).filter(Boolean);
   return {
-    id: it.id, cat: it.cat, eventType: it.eventType || '', poke: !!it.poke,
-    title: it.title, summary: it.summary,
+    id: it.id, cat: it.cat, poke: !!it.poke, title: it.title, summary: it.summary,
     time: it.time, place: it.place, deadline: it.deadline || '', price: it.price || '',
     tags: it.tags || [], pokeReason: it.pokeReason || '',
-    insiderNote: it.insiderNote || '', gapScore: it.gapScore || 0,
-    gapReasons: gapReasons.slice(0, 2), deadlineTier: it.deadlineTier || '',
     goN: it.goN || 0, bdN: it.bdN || 0,
     go: m.go, buddy: m.buddy, attended: m.attended,
     names: it.buddyNames || []
@@ -153,5 +144,5 @@ function fmtDate() {
 
 module.exports = {
   todayStr, clone, load, save, reset, eng, todayItems, allItemsById,
-  cogQ, cardVM, serverCardVM, fmtDate, cacheItems, interestQuery
+  cogQ, cardVM, serverCardVM, fmtDate, cacheItems
 };

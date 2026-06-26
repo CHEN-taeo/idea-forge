@@ -94,31 +94,15 @@ app.post('/api/wechat-cli/poll', async (req, res) => {
   res.json(await require('./ingest/wechat-cli').pollAll());
 });
 
-// 模块视图（带 ?uid= 时返回个人参与态 + 信息差）
-app.get('/api/feed', (req, res) => res.json(modules.feed(req.query.uid, req.query)));
-app.get('/api/buddy', (req, res) => res.json(modules.buddy(req.query.uid, req.query)));
-app.get('/api/radar', (req, res) => res.json(modules.radar(req.query.uid, req.query)));
-app.get('/api/poke', (req, res) => res.json(modules.poke(req.query.uid, req.query)));
-app.get('/api/gap', (req, res) => res.json(modules.gap(req.query.uid, req.query)));
-app.get('/api/calendar', (req, res) => res.json(modules.calendar(req.query.uid, req.query)));
-app.get('/api/me', (req, res) => res.json(modules.mine(req.query.uid, req.query)));
+// 模块视图（带 ?uid= 时返回个人参与态 + 真实计数）
+app.get('/api/feed', (req, res) => res.json(modules.feed(req.query.uid)));
+app.get('/api/buddy', (req, res) => res.json(modules.buddy(req.query.uid)));
+app.get('/api/radar', (req, res) => res.json(modules.radar(req.query.uid)));
+app.get('/api/poke', (req, res) => res.json(modules.poke(req.query.uid)));
+app.get('/api/me', (req, res) => res.json(modules.mine(req.query.uid)));
 app.get('/api/raw', (req, res) => res.json(store.raw().slice(0, 100)));
 app.get('/api/items', (req, res) => res.json(store.items()));
 app.get('/api/stats', (req, res) => res.json(modules.stats()));
-
-// 运营：内幕标注 + 活动类型
-app.post('/api/items/:id/insider', (req, res) => {
-  const { insiderNote, eventType } = req.body || {};
-  const it = store.getItem(req.params.id);
-  if (!it) return res.status(404).json({ error: '条目不存在' });
-  const patch = {};
-  if (typeof insiderNote === 'string') patch.insiderNote = insiderNote.trim();
-  if (eventType) patch.eventType = eventType;
-  const updated = store.updateItem(req.params.id, patch);
-  res.json({ ok: true, item: store.enrich(updated, req.query.uid || req.body.uid) });
-});
-
-app.get('/api/event-types', (req, res) => res.json(modules.EVENT_TYPES));
 
 // 参与：多人"想去/找搭子/去过"计数同步
 app.post('/api/engage', (req, res) => {

@@ -1,31 +1,16 @@
-// 统一处理卡片上的「想去 / 找搭子 / 我去过了 / 分享」
+// 统一处理卡片上的「想去 / 找搭子 / 我去过了」
+// 在线：写后端（多人计数同步）；离线：写本机 storage。
 const store = require('./store.js');
 const api = require('./api.js');
 
 function findCard(data, id) {
-  const arrs = [data.normal, data.poke, data.items, data.gapItems, data.radarItems].filter(Array.isArray);
-  for (const a of arrs) {
-    const f = a.find(x => x.id === id);
-    if (f) return f;
-  }
+  const arrs = [data.normal, data.poke, data.items].filter(Array.isArray);
+  for (const a of arrs) { const f = a.find(x => x.id === id); if (f) return f; }
   return null;
 }
 
 async function handle(page, e) {
   const { id, act } = e.currentTarget.dataset;
-
-  if (act === 'share') {
-    const S = store.load();
-    const card = findCard(page.data, id);
-    if (card) {
-      S.cache = S.cache || {};
-      S.cache[id] = Object.assign({}, card);
-      store.save(S);
-    }
-    wx.navigateTo({ url: '/pages/share/share?id=' + encodeURIComponent(id) });
-    return;
-  }
-
   const S = store.load();
   const card = findCard(page.data, id);
 
@@ -39,6 +24,7 @@ async function handle(page, e) {
     return page.refresh();
   }
 
+  // 离线：本机
   const en = store.eng(S, id);
   if (act === 'go') { en.go = !en.go; if (en.go) S.log.goClicks++; if (!en.go) en.attended = false; }
   else if (act === 'buddy') { en.buddy = !en.buddy; if (en.buddy) S.log.buddyClicks++; }
