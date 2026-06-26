@@ -67,23 +67,27 @@ Based on the game design critique document, this implementation includes:
 
 ## Technology Stack
 
-- **React 18.3** with TypeScript
-- **Tailwind CSS v4** for styling
-- **shadcn/ui** components (Radix UI)
-- **Socket.IO** (mock implementation for demo)
-- **Canvas Confetti** for celebrations
-- **Sonner** for toast notifications
+- **React 18** + TypeScript, **Vite 6**, **Tailwind CSS v4**
+- **Express 5** + **Socket.IO 4** + **SQLite** (`server.js`, `db.js`)
+- **shadcn/ui** (Radix UI), Motion, Canvas Confetti, Sonner
+- Optional **Electron** desktop (`npm run desktop`)
+- **WeChat mini program:** `idea-forge-miniprogram/`
+- **AI:** OpenAI-compatible API in `ai.js` (DeepSeek default; template fallback without key)
+
+## Quick start
+
+```bash
+cp .env.example .env   # optional: set AI_API_KEY
+npm install
+npm run server         # backend :3001
+npm run dev            # frontend :5173
+```
+
+See **`AGENTS.md`** for monorepo map, **`docs/AI-SURFACE.md`** for AI endpoints.
 
 ## Notes
 
-This is a frontend-only implementation with mock game state management. For production use with real multiplayer:
-
-1. Connect to a Socket.IO server (backend implementation available in the critique document)
-2. Replace the mock `useGameSocket` hook with real socket connections
-3. Add authentication and room persistence
-4. Implement timer synchronization
-5. Add gold card mechanics
-6. Implement 3-person variant rules
+Real-time multiplayer uses Socket.IO against `server.js` (not a mock). Session data persists to SQLite. For mobile QA see `docs/MOBILE_E2E_CHECKLIST.md`.
 
 ## Game Design Credits
 

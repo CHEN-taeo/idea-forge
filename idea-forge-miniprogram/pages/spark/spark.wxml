@@ -1,0 +1,138 @@
+<view class="page">
+
+  <view class="spark-tabs">
+
+    <view class="spark-tab {{tab === 'capture' ? 'spark-tab--on' : ''}}" data-tab="capture" bindtap="switchTab">{{brand.sparkTabCapture}}</view>
+
+    <view class="spark-tab {{tab === 'review' ? 'spark-tab--on' : ''}}" data-tab="review" bindtap="switchTab">{{brand.sparkTabReview}}</view>
+
+  </view>
+
+
+
+  <block wx:if="{{tab === 'capture'}}">
+
+    <view class="eyebrow">{{brand.sparkCaptureTitle}}</view>
+
+    <view wx:if="{{savedHint}}" class="lead" style="color:var(--success);font-size:22rpx;margin-bottom:8rpx;">{{brand.sparkSavedShort}}</view>
+
+    <textarea
+
+      class="field-textarea"
+
+      style="min-height:280rpx;font-size:30rpx;margin-bottom:12rpx;"
+
+      placeholder="{{brand.sparkCapturePlaceholder}}"
+
+      value="{{text}}"
+
+      bindinput="onInput"
+
+      bindblur="onBlurSave"
+
+      focus="{{focusInput}}"
+
+    />
+
+    <view class="lead" style="font-size:20rpx;margin-bottom:24rpx;">{{brand.sparkAutosaveHint}}</view>
+
+
+
+    <view wx:if="{{notes.length}}" bindtap="toggleList" class="lead" style="font-size:22rpx;margin-bottom:16rpx;">
+
+      {{showList ? '收起' : '查看'}}{{brand.sparkListToggle}} {{notes.length}} 条 ›
+
+    </view>
+
+    <block wx:if="{{showList}}">
+
+      <view wx:for="{{notes}}" wx:key="id" class="card card--flat" style="padding:24rpx;margin-bottom:12rpx;">
+
+        <view style="font-size:28rpx;color:var(--ink-soft);line-height:1.65;white-space:pre-wrap;">{{item.text}}</view>
+
+        <view style="display:flex;justify-content:space-between;margin-top:16rpx;">
+
+          <text style="font-size:20rpx;color:var(--muted-soft);">{{item.timeLabel}}</text>
+
+          <view style="display:flex;gap:24rpx;">
+
+            <text style="font-size:22rpx;color:var(--accent);" data-text="{{item.text}}" bindtap="toRoundtable">{{brand.sparkToRoundtable}}</text>
+
+            <text style="font-size:22rpx;color:var(--muted);" data-id="{{item.id}}" bindtap="removeNote">删除</text>
+
+          </view>
+
+        </view>
+
+      </view>
+
+    </block>
+
+  </block>
+
+
+
+  <block wx:else>
+
+    <view class="eyebrow">{{review.weekLabel}}</view>
+
+    <view class="display" style="font-size:36rpx;margin:12rpx 0 8rpx;">{{review.headline}}</view>
+
+    <view class="lead" style="margin-bottom:28rpx;">{{review.hint}}</view>
+
+
+
+    <block wx:if="{{!review.empty}}">
+
+      <view wx:if="{{review.themes.length}}" class="field-label">可能反复出现的主题</view>
+
+      <view wx:for="{{review.themes}}" wx:key="label" class="card card--flat" style="padding:24rpx;margin-bottom:12rpx;">
+
+        <view style="font-size:26rpx;color:var(--accent);">{{item.label}} · {{item.count}} 条</view>
+
+        <view class="lead" style="margin-top:8rpx;font-size:22rpx;">{{item.sample}}</view>
+
+      </view>
+
+
+
+      <view wx:if="{{review.connections.length}}" class="field-label">可能的联系</view>
+
+      <view wx:for="{{review.connections}}" wx:key="index" class="card card--flat" style="padding:24rpx;margin-bottom:12rpx;">
+
+        <view style="font-size:20rpx;color:var(--muted-soft);margin-bottom:8rpx;">{{item.reason}}</view>
+
+        <view style="font-size:24rpx;color:var(--ink-soft);">「{{item.textA}}」</view>
+
+        <view style="font-size:24rpx;color:var(--ink-soft);margin-top:8rpx;">「{{item.textB}}」</view>
+
+      </view>
+
+
+
+      <view class="card" style="background:var(--accent-soft);border-color:rgba(196,103,58,0.35);margin-bottom:24rpx;">
+
+        <view class="field-label" style="color:var(--accent);">想一想</view>
+
+        <view style="font-size:28rpx;color:var(--ink-soft);line-height:1.7;">{{review.openQuestion}}</view>
+
+      </view>
+
+
+
+      <view class="field-label">{{brand.sparkWeekNotes}}</view>
+
+      <view wx:for="{{review.notes}}" wx:key="id" class="card card--flat" style="padding:24rpx;margin-bottom:12rpx;display:flex;gap:16rpx;">
+
+        <view style="flex:1;font-size:28rpx;color:var(--ink-soft);line-height:1.65;">{{item.text}}</view>
+
+        <text style="font-size:22rpx;color:var(--accent);flex-shrink:0;" data-text="{{item.text}}" bindtap="toRoundtable">入席 →</text>
+
+      </view>
+
+    </block>
+
+  </block>
+
+</view>
+

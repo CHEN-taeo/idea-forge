@@ -1,5 +1,6 @@
 const brand = require('../../utils/brand');
 const { fetchHealth, fetchAiStatus, SERVER_URL } = require('../../utils/api');
+const { PROD_SERVER_URL } = require('../../utils/config');
 const { loadSession } = require('../../utils/storage');
 
 Page({
@@ -14,7 +15,7 @@ Page({
 
   onLoad(options) {
     if (options.room) {
-      wx.redirectTo({ url: `/pages/join/join?room=${options.room}` });
+      wx.redirectTo({ url: `/pages/room-entry/room-entry?room=${options.room}` });
       return;
     }
     this.tryResumeRoom();
@@ -22,6 +23,21 @@ Page({
 
   onShow() {
     this.checkServer();
+    this.checkProdConfig();
+  },
+
+  checkProdConfig() {
+    if (PROD_SERVER_URL) return;
+    try {
+      const { envVersion } = wx.getAccountInfoSync().miniProgram;
+      if (envVersion === 'release' || envVersion === 'trial') {
+        this.setData({
+          serverHint: '发布前请在 config.prod.js 配置 HTTPS 后端域名',
+        });
+      }
+    } catch {
+      // ignore
+    }
   },
 
   checkServer() {
@@ -63,7 +79,7 @@ Page({
     });
   },
 
-  tapCreate() {
+  tapRoom() {
     if (!this.data.serverOk) {
       wx.showModal({
         title: '后端未连接',
@@ -72,26 +88,22 @@ Page({
       });
       return;
     }
-    wx.navigateTo({ url: '/pages/create/create' });
+    wx.navigateTo({ url: '/pages/room-entry/room-entry' });
   },
 
-  tapJoin() {
-    if (!this.data.serverOk) {
-      wx.showModal({
-        title: '后端未连接',
-        content: `在项目根目录运行：\nnpm run server\n\n地址：${SERVER_URL}`,
-        showCancel: false,
-      });
-      return;
-    }
-    wx.navigateTo({ url: '/pages/join/join' });
-  },
-
-  tapSolo() {
-    wx.navigateTo({ url: '/pages/solo/solo' });
+  tapSpark() {
+    wx.navigateTo({ url: '/pages/spark/spark' });
   },
 
   tapRoundtable() {
+    if (!this.data.serverOk) {
+      wx.showModal({
+        title: '后端未连接',
+        content: `名士围炉需要后端在线。\n\n开发：npm run server\n地址：${SERVER_URL}`,
+        showCancel: false,
+      });
+      return;
+    }
     wx.navigateTo({ url: '/pages/roundtable/roundtable' });
   },
 });
