@@ -11,8 +11,9 @@ import { validateSmartCommitment, formatSmartAction } from './smartCommitment.js
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = process.env.PORT || 3001;
-const IS_PRODUCTION = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // ---------------------------------------------------------------------------
 // Express for static files + REST API
@@ -897,19 +898,20 @@ for (const state of loadAllActiveRooms()) {
   }
 }
 
-httpServer.listen(PORT, () => {
-  const url = `http://localhost:${PORT}`;
+httpServer.listen(PORT, HOST, () => {
+  const url = `http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`;
   console.log(`\n========================================`);
-  console.log(`  Idea Forge Server v4.1.0`);
-  console.log(`  ${url}`);
+  console.log(`  炉边 Server`);
+  console.log(`  ${url} (bind ${HOST}:${PORT})`);
   console.log(`  DB: ideaforge.db`);
   console.log(`  AI: ${getStatus().mode === 'ai' ? `enabled (${getStatus().model})` : 'template mode (no key)'}`);
   console.log(`========================================\n`);
 
-  // Auto-open browser
-  const cmd = process.platform === 'win32' ? `start "" "${url}"` :
-              process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
-  exec(cmd, () => {});
+  if (!IS_PRODUCTION) {
+    const cmd = process.platform === 'win32' ? `start "" "${url}"` :
+                process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
+    exec(cmd, () => {});
+  }
 });
 
 process.on('SIGTERM', () => {
