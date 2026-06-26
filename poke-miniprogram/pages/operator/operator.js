@@ -111,5 +111,6 @@ Page({
   },
 
   closeEdit() { this.setData({ showEdit: false }); },
+  goInsider() { wx.navigateTo({ url: '/pages/insider/insider' }); },
   noop() {}
 });

@@ -9,7 +9,7 @@ Page({
 
   async refresh() {
     const S = store.load();
-    const data = await api.buddy(S.uid);
+    const data = await api.buddy(S.uid, store.interestQuery(S));
     const online = Array.isArray(data);
     if (online) { store.cacheItems(S, data); store.save(S); }
     this.setData({ online, items: online ? data.map(store.serverCardVM) : [] });
