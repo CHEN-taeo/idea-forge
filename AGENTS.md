@@ -101,3 +101,42 @@ Local dev usually needs **two processes**: `npm run server` (backend :3001) and 
 - Prefer editing existing files; match the surrounding module system and style.
 - After substantive edits, build/run the affected product to verify rather than relying on a typecheck step (there isn't one).
 - Only commit when explicitly asked.
+
+---
+
+## Cursor Cloud specific instructions
+
+This checkout may contain **Idea Forge only** (no `poke-*` directories). Scope cloud setup to repo root unless Poke folders are present.
+
+### Dev startup (two processes)
+From repo root, after `npm install` and a root `.env` (see below):
+
+```bash
+npm run server          # Express + Socket.IO + SQLite on :3001
+npm run dev             # Vite on :5173 (add -- --host 0.0.0.0 if exposing outside localhost)
+```
+
+Use **tmux** (or two terminals) for long-running servers. Prod-like single port: `npm run build && npm run server` → browse `:3001`.
+
+### Root `.env` (not committed; create locally)
+Minimum for dev:
+
+```env
+PORT=3001
+VITE_SERVER_URL=http://localhost:3001
+```
+
+`AI_API_KEY` is optional — without it, `ai.js` uses Chinese template fallbacks (`/api/ai/status` → `mode: "template"`).
+
+### Verify without a browser
+- `curl http://localhost:3001/api/ai/status`
+- Socket.IO `create_room` / `join_room` on `:3001` (see `server.js`)
+
+### Lint / test
+No ESLint, typecheck, or test script in root `package.json`. Verify with `npm run build` and manual or scripted smoke tests against running servers.
+
+### Node
+Use **Node 20+** (22.x works; required by `better-sqlite3` prebuilds). Package manager: **npm** (`package-lock.json`). `postinstall` runs `vite build` — first install takes longer.
+
+### Poke (when present)
+`poke-server`: `cd poke-server && npm install && npm start` (:5700). `poke-miniprogram` needs 微信开发者工具; `poke-mvp` is static `index.html` only.
