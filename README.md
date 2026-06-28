@@ -1,5 +1,11 @@
 # 🎲 Idea Forge v3.3
 
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/CHEN-taeo/idea-forge" alt="Last Commit">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</p>
+
+
 A collaborative brainstorming game built with React, TypeScript, and Tailwind CSS.
 
 ## Features Implemented
@@ -88,3 +94,10 @@ This is a frontend-only implementation with mock game state management. For prod
 ## Game Design Credits
 
 Based on the Idea Forge v3.3 design critique and improvements documented in the provided game logic updates.
+
+
+---
+
+## License
+
+MIT
