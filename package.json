@@ -9,6 +9,7 @@
     "dev": "vite",
     "server": "node --env-file=.env server.js",
     "start": "node --env-file=.env server.js",
+    "start:prod": "NODE_ENV=production node --env-file=.env server.js",
     "desktop": "electron .",
     "dist": "vite build && electron-builder --win",
     "postinstall": "vite build"
