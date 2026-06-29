@@ -15,5 +15,5 @@
   <view class="primary" bindtap="submit">{{loading ? 'AI 整理中…' : '导入'}}</view>
 
   <view class="hint">导入后回到「今天」或「机会」下拉刷新。闲聊会自动过滤。</view>
-  <view class="hint wewe">公众号可全自动：本机 WeWe-RSS → RSS 写入破壳采集源</view>
+  <view class="hint wewe">公众号可全自动：本机 WeWe-RSS → RSS 写入流萤采集源</view>
 </view>

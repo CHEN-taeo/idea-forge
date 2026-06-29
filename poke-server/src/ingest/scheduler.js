@@ -2,29 +2,39 @@
 const sources = require('./sources');
 const aiSources = require('./ai-sources');
 const { fetchSource } = require('./web');
+const { bodyText } = require('./mpArticle');
 const { ingestMany } = require('./core');
 
 let campusTimer = null;
 let aiTimer = null;
 
-function mapItemsToMessages(items, src) {
-  return items.map(it => ({
-    text: (it.title + (it.desc ? ' ' + it.desc : '')).slice(0, 400),
-    room: src.room || '自动源',
-    sender: '自动采集',
-    source: src.platform || src.type || 'rss',
-    url: it.link || '',
-    imageUrl: it.imageUrl || '',
-    lane: src.lane || 'campus',
-    platform: src.platform || src.type || 'rss',
-    stars: it.stars || (it.meta && it.meta.stars) || 0
-  })).filter(m => m.text.trim());
+async function mapItemsToMessages(items, src) {
+  const messages = [];
+  for (const it of items) {
+    const body = await bodyText(it);
+    const text = [it.title, body].filter(Boolean).join('\n\n').trim();
+    if (!text) continue;
+    const isMp = (src.wewe || /公众号/.test(src.room || '') || /mp\.weixin\.qq\.com/i.test(it.link || ''));
+    messages.push({
+      text: text.slice(0, 12000),
+      fullBody: body.slice(0, 12000),
+      room: src.room || '自动源',
+      sender: isMp ? '公众号' : '自动采集',
+      source: isMp ? 'mp' : (src.platform || src.type || 'rss'),
+      url: it.link || '',
+      imageUrl: it.imageUrl || '',
+      lane: src.lane || 'campus',
+      platform: isMp ? '公众号' : (src.platform || src.type || 'rss'),
+      stars: it.stars || (it.meta && it.meta.stars) || 0
+    });
+  }
+  return messages;
 }
 
 async function pollOne(src) {
   try {
     const items = await fetchSource(src);
-    const messages = mapItemsToMessages(items, src);
+    const messages = await mapItemsToMessages(items, src);
     const out = await ingestMany(messages);
     const patch = { lastPoll: Date.now(), lastCount: out.added, lastError: '' };
     if (src.lane === 'ai') aiSources.update(src.id, patch);

@@ -1,8 +1,10 @@
-.detail-page { min-height: 100vh; background: var(--paper); }
+.detail-page { min-height: 100vh; background: var(--bg-base); }
 .detail-nav {
-  position: relative; z-index: 10;
+  position: sticky; top: 0; z-index: 10;
   padding: 8rpx 24rpx 12rpx;
-  background: var(--paper);
+  background: var(--bg-glass);
+  border-bottom: 1rpx solid var(--border);
+  box-shadow: var(--shadow-tab);
 }
 .detail-nav-overlay {
   position: absolute; left: 0; right: 0; top: 0; z-index: 20;
@@ -47,8 +49,8 @@
   display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 20rpx;
 }
 .detail-pill {
-  font-size: 22rpx; padding: 8rpx 18rpx; border-radius: 999rpx;
-  background: var(--celadon-mist); color: var(--celadon);
+  font-size: 22rpx; padding: 8rpx 18rpx; border-radius: var(--radius-seal);
+  background: var(--stone-blue-soft); color: var(--stone-blue);
 }
 .detail-reasons {
   display: flex; flex-wrap: wrap; align-items: center; margin-top: 8rpx;
@@ -110,33 +112,32 @@
 
 .detail-sticky {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-glass);
+  border-top: 1rpx solid var(--border);
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
-  box-shadow: 0 -4rpx 24rpx rgba(44,38,32,0.06);
+  box-shadow: var(--shadow-tab);
 }
 .detail-sticky-primary {
-  background: var(--celadon); color: #fff; text-align: center;
-  border-radius: var(--radius-lg); padding: 24rpx; font-size: 30rpx; font-weight: 600;
+  background: var(--accent); color: #fff; text-align: center;
+  border-radius: 56rpx; padding: 24rpx; font-size: 30rpx; font-weight: 700;
 }
 .detail-sticky-row { display: flex; gap: 16rpx; margin-top: 12rpx; }
 .detail-sticky-ghost {
   flex: 1; text-align: center; padding: 18rpx;
-  background: var(--bg-inset); color: var(--celadon);
+  background: var(--bg-inset); color: var(--stone-blue);
   border-radius: var(--radius-md); font-size: 26rpx;
 }
 
 /* Skeleton */
 .skeleton-block {
   height: 360rpx;
-  background: linear-gradient(90deg, #EDE9E2 25%, #F5F0E8 50%, #EDE9E2 75%);
+  background: linear-gradient(90deg, #EFEBE6 25%, #F7F5F2 50%, #EFEBE6 75%);
   background-size: 200% 100%;
   animation: skeletonShimmer 1.2s ease-in-out infinite;
 }
 .skeleton-line {
   height: 28rpx; border-radius: 8rpx; margin-bottom: 16rpx;
-  background: linear-gradient(90deg, #EDE9E2 25%, #F5F0E8 50%, #EDE9E2 75%);
+  background: linear-gradient(90deg, #EFEBE6 25%, #F7F5F2 50%, #EFEBE6 75%);
   background-size: 200% 100%;
   animation: skeletonShimmer 1.2s ease-in-out infinite;
 }
@@ -145,7 +146,7 @@
 .skeleton-line.w90 { width: 90%; }
 .skeleton-card {
   height: 120rpx; border-radius: var(--radius-group); margin-top: 24rpx;
-  background: linear-gradient(90deg, #EDE9E2 25%, #F5F0E8 50%, #EDE9E2 75%);
+  background: linear-gradient(90deg, #EFEBE6 25%, #F7F5F2 50%, #EFEBE6 75%);
   background-size: 200% 100%;
   animation: skeletonShimmer 1.2s ease-in-out infinite;
 }

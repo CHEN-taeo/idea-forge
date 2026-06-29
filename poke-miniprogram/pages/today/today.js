@@ -1,34 +1,61 @@
 const store = require('../../utils/store.js');
 const api = require('../../utils/api.js');
 const motion = require('../../utils/motion.js');
+const firefly = require('../../utils/firefly.js');
+const masonry = require('../../utils/masonry.js');
+const tags = require('../../utils/tags.js');
+const dailyBrief = require('../../utils/dailyBrief.js');
+const welcome = require('../../utils/welcome.js');
+const theme = require('../../utils/theme.js');
+const safearea = require('../../utils/safearea.js');
+const brand = require('../../utils/brand.js');
+const act = require('../../utils/act.js');
+const cardNav = require('../../utils/cardNav.js');
+const { FILTER_PILLS } = require('../../utils/design-tokens.js');
 
 Page({
   data: {
-    heroData: {
-      toolbar: true,
-      showMark: true,
-      title: '破壳',
-      subtitle: '晨光里的校园通知栏',
-      meta: '连接中…',
-      metaOnline: false,
-      actionMuted: '运营',
-      actionPrimary: '导入'
-    },
-    dateLabel: '', heroMeta: '', normal: [], poke: [], online: false, statusText: '连接中…'
+    themeDark: false,
+    navPadTop: 24,
+    navPadRight: 24,
+    brandName: brand.NAME,
+    brandSlogan: brand.SLOGAN,
+    welcomeQuote: '',
+    heroMeta: '',
+    filters: FILTER_PILLS,
+    activeFilter: '全部',
+    brief: [],
+    leftCol: [],
+    rightCol: [],
+    hasItems: false,
+    online: false,
+    refreshing: false
   },
+
+  onLoad() {
+    safearea.applyToPage(this);
+    theme.applyPageTheme(this);
+    this.setData({ welcomeQuote: welcome.dailyQuote() });
+  },
+
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 });
     }
+    theme.applyPageTheme(this);
     this.refresh();
   },
-  onPullDownRefresh() { this.refresh().then(() => wx.stopPullDownRefresh()); },
+
+  onPullDownRefresh() {
+    this.refresh().then(() => wx.stopPullDownRefresh());
+  },
 
   async refresh() {
+    this.setData({ refreshing: true });
     const S = store.load();
     const iq = store.interestQuery(S);
     const results = await Promise.all([
-      api.feed(S.uid, iq),
+      api.feed(S.uid, Object.assign({ limit: 80 }, iq)),
       api.poke(S.uid, iq),
       api.health()
     ]);
@@ -38,50 +65,53 @@ Page({
     const online = Array.isArray(feed);
     const llmOn = health && health.llm === 'on';
     let statusText = '离线示例';
-    if (online) {
-      statusText = llmOn ? 'DeepSeek · 实时整理' : '规则引擎 · 已连接';
-    }
+    if (online) statusText = llmOn ? 'DeepSeek · 实时整理' : '规则引擎 · 已连接';
 
-    let normal, pokeArr;
+    let all = [];
     if (online) {
       store.cacheItems(S, feed);
       if (Array.isArray(poke)) store.cacheItems(S, poke);
       store.save(S);
-      normal = motion.withEnter(feed.map(store.serverCardVM));
-      pokeArr = motion.withEnter((Array.isArray(poke) ? poke : []).map(it => store.serverCardVM(Object.assign({}, it, { poke: true }))));
+      const pokeArr = Array.isArray(poke) ? poke : [];
+      all = feed.map(store.serverCardVM).concat(
+        pokeArr.map((it) => store.serverCardVM(Object.assign({}, it, { poke: true })))
+      );
     } else {
       const normalRaw = (S.days[store.todayStr()] || []);
       const p = S.pokeOfDay[store.todayStr()];
-      normal = motion.withEnter(normalRaw.map(it => store.cardVM(S, it)));
-      pokeArr = p ? motion.withEnter([store.cardVM(S, Object.assign({}, p, { poke: true }))]) : [];
+      all = normalRaw.map((it) => store.cardVM(S, it));
+      if (p) all.push(store.cardVM(S, Object.assign({}, p, { poke: true })));
     }
 
-    const dateLabel = store.fmtDate();
+    const filtered = tags.filterByTag(all, this.data.activeFilter);
+    const briefRaw = dailyBrief.build(filtered, S.interests || []);
+    const brief = briefRaw.map((b, i) => Object.assign({}, b, { enterClass: firefly.briefEnterClass(i) }));
+    const briefIds = {};
+    brief.forEach((b) => { briefIds[b.card.id] = true; });
+    const wallItems = filtered.filter((c) => !briefIds[c.id]);
+    const withEnter = firefly.withFireflyEnter(wallItems);
+    const cols = masonry.toMasonry(withEnter);
+
     this.setData({
-      dateLabel,
-      heroMeta: dateLabel + ' · ' + statusText,
-      heroData: {
-        toolbar: true,
-        showMark: true,
-        title: '破壳',
-        subtitle: '晨光里的校园通知栏',
-        meta: dateLabel + ' · ' + statusText,
-        metaOnline: online,
-        actionMuted: '运营',
-        actionPrimary: '导入'
-      },
+      refreshing: false,
       online,
-      statusText,
-      normal,
-      poke: pokeArr
+      heroMeta: store.fmtDate() + ' · ' + statusText,
+      hasItems: filtered.length > 0,
+      brief: brief,
+      leftCol: cols.left,
+      rightCol: cols.right
     });
   },
 
-  onAct(e) { return require('../../utils/act.js').handle(this, e); },
-  onCardTap(e) { require('../../utils/cardNav.js').onCardTap(e); },
-  onHeroPrimary() { this.goForward(); },
-  onHeroMuted() { this.goOperator(); },
-  goOperator() { wx.navigateTo({ url: '/pages/operator/operator' }); },
-  goForward() { wx.navigateTo({ url: '/pages/forward/forward' }); },
-  goRadar() { wx.switchTab({ url: '/pages/radar/radar' }); }
+  onFilter(e) {
+    act.vibrate('light');
+    const activeFilter = e.currentTarget.dataset.filter;
+    this.setData({ activeFilter });
+    this.refresh();
+  },
+
+  onAct(e) { return act.handle(this, e); },
+  onCardTap(e) { cardNav.onCardTap(e); },
+  goAdd() { act.vibrate('light'); wx.navigateTo({ url: '/pages/add/add' }); },
+  goRadar() { wx.navigateTo({ url: '/pages/radar/radar' }); }
 });

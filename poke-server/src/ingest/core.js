@@ -16,7 +16,9 @@ async function ingestOne(msg) {
     platform: msg.platform || '',
     lane,
     stars: msg.stars,
-    imageUrl: msg.imageUrl || ''  });
+    imageUrl: msg.imageUrl || '',
+    fullBody: msg.fullBody || ''
+  });
   if (!it) return { skipped: true, reason: 'empty' };
   if (it.cat === '噪音') return { skipped: true, reason: 'noise', item: it };
   if (lane === 'campus' && !it.lane) it.lane = 'campus';

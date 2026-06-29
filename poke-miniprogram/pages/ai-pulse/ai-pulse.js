@@ -1,6 +1,7 @@
 const store = require('../../utils/store.js');
 const api = require('../../utils/api.js');
 const motion = require('../../utils/motion.js');
+const cardNav = require('../../utils/cardNav.js');
 const FILTERS = ['全部', '妙招', '工作流', '模型', '大家在用', '开源', '播客'];
 
 Page({
@@ -86,7 +87,7 @@ Page({
   },
 
   onAct(e) { return require('../../utils/act.js').handle(this, e); },
-  onCardTap(e) { require('../../utils/cardNav.js').onCardTap(e); },
+  onCardTap(e) { cardNav.onCardTap(e); },
 
   onCopyLink(e) {
     const url = e.currentTarget.dataset.url;

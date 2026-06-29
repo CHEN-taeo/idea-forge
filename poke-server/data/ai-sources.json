@@ -7,7 +7,7 @@
     "room": "HN·AI Agents",
     "platform": "hn",
     "enabled": true,
-    "lastPoll": 1782705834490,
+    "lastPoll": 1782733996416,
     "lastCount": 0,
     "lastError": ""
   },
@@ -19,8 +19,8 @@
     "room": "HN·LLM",
     "platform": "hn",
     "enabled": true,
-    "lastPoll": 1782705849931,
-    "lastCount": 1,
+    "lastPoll": 1782734007977,
+    "lastCount": 0,
     "lastError": ""
   },
   {
@@ -31,7 +31,7 @@
     "room": "GitHub·Cursor",
     "platform": "github",
     "enabled": true,
-    "lastPoll": 1782705850818,
+    "lastPoll": 1782734008782,
     "lastCount": 0,
     "lastError": ""
   },
@@ -43,7 +43,7 @@
     "room": "GitHub·MCP",
     "platform": "github",
     "enabled": true,
-    "lastPoll": 1782705851409,
+    "lastPoll": 1782725178349,
     "lastCount": 0,
     "lastError": ""
   },
@@ -55,7 +55,7 @@
     "room": "GitHub·Agents",
     "platform": "github",
     "enabled": true,
-    "lastPoll": 1782705852015,
+    "lastPoll": 1782734009893,
     "lastCount": 0,
     "lastError": ""
   },
@@ -67,8 +67,8 @@
     "room": "OpenAI Blog",
     "platform": "rss",
     "enabled": true,
-    "lastPoll": 1782705660393,
-    "lastCount": 5,
+    "lastPoll": 1782735130971,
+    "lastCount": 1,
     "lastError": ""
   },
   {
@@ -79,7 +79,7 @@
     "room": "Anthropic",
     "platform": "rss",
     "enabled": true,
-    "lastPoll": 1782705666534,
+    "lastPoll": 1782735137561,
     "lastCount": 0,
     "lastError": "HTTP 404"
   },
@@ -91,8 +91,8 @@
     "room": "HN Frontpage",
     "platform": "hn",
     "enabled": true,
-    "lastPoll": 1782705698256,
-    "lastCount": 7,
+    "lastPoll": 1782735169652,
+    "lastCount": 0,
     "lastError": ""
   },
   {
@@ -103,7 +103,7 @@
     "room": "Latent Space",
     "platform": "podcast",
     "enabled": true,
-    "lastPoll": 1782705710761,
+    "lastPoll": 1782735190565,
     "lastCount": 0,
     "lastError": ""
   },
@@ -115,8 +115,8 @@
     "room": "Simon Willison",
     "platform": "rss",
     "enabled": true,
-    "lastPoll": 1782705738841,
-    "lastCount": 1,
+    "lastPoll": 1782735233927,
+    "lastCount": 0,
     "lastError": ""
   },
   {
@@ -127,7 +127,7 @@
     "room": "GitHub Blog",
     "platform": "github",
     "enabled": true,
-    "lastPoll": 1782705747814,
+    "lastPoll": 1782722711274,
     "lastCount": 0,
     "lastError": ""
   },
@@ -139,8 +139,8 @@
     "room": "Cursor Changelog",
     "platform": "rss",
     "enabled": true,
-    "lastPoll": 1782705762855,
-    "lastCount": 2,
+    "lastPoll": 1782735261713,
+    "lastCount": 0,
     "lastError": ""
   }
 ]

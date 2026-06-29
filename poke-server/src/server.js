@@ -12,6 +12,7 @@ const sources = require('./ingest/sources');
 const aiSources = require('./ingest/ai-sources');
 const scheduler = require('./ingest/scheduler');
 const digest = require('./ai/digest');
+const askItem = require('./ai/askItem');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -162,6 +163,26 @@ app.post('/api/items/:id/insider', (req, res) => {
 
 app.get('/api/event-types', (req, res) => res.json(modules.EVENT_TYPES));
 
+app.get('/api/mp-suggestions', (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const f = path.join(__dirname, '..', 'data', 'wewe-feeds.template.json');
+    const t = JSON.parse(fs.readFileSync(f, 'utf8'));
+    const configured = sources.list().filter(s => s.wewe || /公众号/.test(s.room || ''));
+    res.json({
+      weweRssBase: t.weweRssBase,
+      suggested: t.suggestedAccounts || [],
+      configured: configured.map(s => ({
+        id: s.id, room: s.room, enabled: s.enabled !== false,
+        lastPoll: s.lastPoll, lastCount: s.lastCount, lastError: s.lastError || ''
+      }))
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // 参与：多人"想去/找搭子/去过"计数同步
 app.post('/api/engage', (req, res) => {
   const { uid, name, itemId, action, value } = req.body || {};
@@ -170,6 +191,17 @@ app.post('/api/engage', (req, res) => {
   }
   const counts = store.setEngage(itemId, uid, name, action, value !== false);
   res.json({ ok: true, itemId, counts, mine: store.mineState(itemId, uid) });
+});
+
+app.post('/api/ask', async (req, res) => {
+  const { itemId, question, interests } = req.body || {};
+  if (!itemId || !question) return res.status(400).json({ error: '需要 itemId 与 question' });
+  try {
+    const out = await askItem.ask(itemId, question, interests);
+    res.json(out);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 5700;

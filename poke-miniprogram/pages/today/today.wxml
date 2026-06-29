@@ -1,41 +1,81 @@
-<import src="../../templates/hero.wxml" />
-<import src="../../templates/card.wxml" />
+<page-meta root-class="{{themeDark ? 'theme-dark' : ''}}" background-color="{{themeDark ? '#15171C' : '#F7F5F2'}}" />
+<view class="page-texture"></view>
 
-<template is="hero" data="{{heroData}}" />
+<import src="../../templates/masonry-card.wxml" />
+
+<view class="welcome-bar glass-bar" style="padding-top:{{navPadTop}}px;padding-right:{{navPadRight}}px">
+  <view class="welcome-brand">{{brandName}} · {{brandSlogan}}</view>
+  <view class="welcome-quote">{{welcomeQuote}}</view>
+  <view class="welcome-sub">{{heroMeta}}</view>
+</view>
+
+<scroll-view scroll-x class="pill-scroll" enable-flex>
+  <view class="pill-row">
+    <view
+      wx:for="{{filters}}"
+      wx:key="*this"
+      class="pill {{activeFilter === item ? 'on' : ''}}"
+      data-filter="{{item}}"
+      bindtap="onFilter"
+    >{{item}}</view>
+  </view>
+</scroll-view>
 
 <view class="wrap tabpage">
-  <block wx:if="{{normal.length || poke.length}}">
-    <view class="lead">今日精选，看完即知。</view>
+  <view wx:if="{{refreshing}}" class="ink-loader">
+    <view class="ink-blob"></view>
+    <view class="ink-blob"></view>
+    <view class="ink-blob"></view>
+    <view class="ink-blob"></view>
+  </view>
 
-    <view class="card-group">
-      <view class="sec-title"><text class="n">{{normal.length}}</text>值得看</view>
-      <view class="card-inset">
-        <block wx:for="{{normal}}" wx:key="id">
-          <template is="card" data="{{c: item}}" />
-        </block>
+  <block wx:elif="{{hasItems}}">
+    <view wx:if="{{brief.length}}" class="brief-section">
+      <view class="sec-title" style="margin-top:0">今日三件事</view>
+      <view
+        wx:for="{{brief}}"
+        wx:key="slot"
+        class="brief-card glass {{item.enterClass}}"
+        bindtap="onCardTap"
+        data-id="{{item.card.id}}"
+        hover-class="glass-press"
+      >
+        <view class="brief-glow"></view>
+        <view class="brief-slot">{{item.slotLabel}}</view>
+        <view class="brief-hint">{{item.slotHint}}</view>
+        <view wx:if="{{item.reason}}" class="type-caption" style="color:var(--accent);margin-bottom:8rpx">{{item.reason}}</view>
+        <view class="brief-title">{{item.card.title}}</view>
+        <view wx:if="{{item.card.time || item.card.place || item.card.deadline}}" class="brief-meta">
+          <text wx:if="{{item.card.time}}">{{item.card.time}}</text>
+          <text wx:if="{{item.card.place}}"> · {{item.card.place}}</text>
+          <text wx:if="{{item.card.deadline}}"> · {{item.card.deadline}}</text>
+        </view>
+        <view class="brief-summary">{{item.card.summary}}</view>
       </view>
     </view>
 
-    <block wx:if="{{poke.length}}">
-      <view class="card-group">
-        <view class="sec-title"><text class="n">{{poke.length}}</text>破壳 · 圈外</view>
-        <view class="card-inset">
-          <block wx:for="{{poke}}" wx:key="id">
-            <template is="card" data="{{c: item}}" />
-          </block>
-        </view>
+    <view class="sec-title">灵感墙</view>
+    <view class="masonry">
+      <view class="masonry-col">
+        <block wx:for="{{leftCol}}" wx:key="id">
+          <template is="masonryCard" data="{{c: item}}" />
+        </block>
       </view>
-    </block>
+      <view class="masonry-col">
+        <block wx:for="{{rightCol}}" wx:key="id">
+          <template is="masonryCard" data="{{c: item}}" />
+        </block>
+      </view>
+    </view>
+    <view class="brush-rule"></view>
+    <view wx:if="{{online}}" class="ghost" bindtap="goRadar">浏览机会雷达</view>
   </block>
 
   <view wx:else class="empty">
+    <view class="firefly-empty-glow"></view>
     <image class="empty-img" src="/assets/empty-import.svg" mode="aspectFit" />
-    <view class="empty-title">还没有动静</view>
-    <view class="small">去导入一条群消息，约 30 秒后出现</view>
-    <view class="ghost" style="margin-top:32rpx" bindtap="goForward">去导入</view>
-  </view>
-
-  <view wx:if="{{online}}" class="linkbar">
-    <view class="ghost" bindtap="goRadar">查看全部机会</view>
+    <view class="empty-title">第一点光，还在等你拾起</view>
+    <view class="small">收录一条消息，光点就会亮起来</view>
+    <view class="btn-cinnabar" style="margin:32rpx 24rpx 0" bindtap="goAdd">落笔收录</view>
   </view>
 </view>

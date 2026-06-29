@@ -1,11 +1,13 @@
 // 生成 9:16 分享图并保存到相册
+const brand = require('./brand.js');
+
 function drawShare(card, ctx, w, h) {
-  const bg = '#F5F0E8';
-  const cardBg = '#FFFFFF';
-  const accent = '#3D6B5E';
-  const ink = '#2C2C2C';
-  const inkMuted = '#6B6560';
-  const cinnabar = '#C45C4A';
+  const bg = '#F7F5F2';
+  const cardBg = 'rgba(255,255,255,0.92)';
+  const accent = '#6B8CAE';
+  const ink = '#2A2E37';
+  const inkMuted = 'rgba(42,46,55,0.65)';
+  const lotus = '#D8A7B0';
 
   ctx.setFillStyle(bg);
   ctx.fillRect(0, 0, w, h);
@@ -20,7 +22,7 @@ function drawShare(card, ctx, w, h) {
 
   ctx.setFillStyle(accent);
   ctx.setFontSize(22);
-  ctx.fillText('破壳', 60, 80);
+  ctx.fillText(brand.NAME, 60, 80);
 
   ctx.setFillStyle(accent);
   ctx.setFontSize(20);
@@ -36,7 +38,7 @@ function drawShare(card, ctx, w, h) {
   wrapText(ctx, card.summary || '', 60, 340, w - 120, 30, 4);
 
   if (card.deadline) {
-    ctx.setFillStyle(cinnabar);
+    ctx.setFillStyle(lotus);
     ctx.setFontSize(22);
     ctx.fillText('截止 ' + card.deadline, 60, h - 220);
   }
@@ -47,7 +49,7 @@ function drawShare(card, ctx, w, h) {
 
   ctx.setFillStyle('#A39E97');
   ctx.setFontSize(18);
-  ctx.fillText('破壳 · 把群消息变成今天值得做的事', 60, h - 100);
+  ctx.fillText(brand.NAME + ' · ' + brand.SLOGAN, 60, h - 100);
 }
 
 function roundRect(ctx, x, y, w, h, r) {

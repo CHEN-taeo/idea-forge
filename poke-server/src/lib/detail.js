@@ -10,13 +10,14 @@ function arr(v, max) {
 function normalizeDetail(d) {
   if (!d || typeof d !== 'object') return null;
   const out = {
-    lede: String(d.lede || '').slice(0, 200),
+    lede: String(d.lede || '').slice(0, 400),
     whoFor: arr(d.whoFor, 4),
-    actions: arr(d.actions, 5),
-    highlights: arr(d.highlights, 6),
-    caveats: arr(d.caveats, 3)
+    actions: arr(d.actions, 6),
+    highlights: arr(d.highlights, 8),
+    caveats: arr(d.caveats, 3),
+    fullBody: String(d.fullBody || '').slice(0, 12000)
   };
-  if (!out.lede && !out.whoFor.length && !out.actions.length && !out.highlights.length) return null;
+  if (!out.lede && !out.whoFor.length && !out.actions.length && !out.highlights.length && !out.fullBody) return null;
   return out;
 }
 
@@ -34,7 +35,8 @@ function inferCoverType(out) {
   return 'default';
 }
 
-function buildRuleDetail(out, text) {
+function buildRuleDetail(out, text, meta) {
+  const m = meta || {};
   const t = (text || '').trim();
   const highlights = [];
   if (out.time) highlights.push(out.time);
@@ -51,32 +53,33 @@ function buildRuleDetail(out, text) {
   if (out.lane === 'ai' || out.cat === 'AI脉动') whoFor.push('日常用 AI 工具的同学');
 
   const actions = [];
-  if (out.deadline) actions.push('留意截止时间：' + out.deadline);
-  if (out.place) actions.push('确认地点：' + out.place);
-  if (out.url) actions.push('打开原文链接查看报名方式或完整说明');
-  else if (/(报名|注册|申请)/.test(t)) actions.push('按群消息/通知要求完成报名或材料提交');
-  if (!actions.length && t.length > 20) actions.push('阅读完整原文，确认是否需要行动');
+  if (out.deadline) actions.push('点「提醒我」写入日历，截止前收到提醒');
+  if (out.place) actions.push('地点：' + out.place + '（已收录，无需跳转）');
+  if (/(报名|注册|申请|扫码)/.test(t)) actions.push('按正文要求完成报名；可用「复制全部信息」发给同学');
+  if (!actions.length && t.length > 20) actions.push('阅读下方完整正文，确认是否需要行动');
+  if (!actions.length) actions.push('先收藏，稍后回来细看');
 
   const caveats = [];
   if (/(名额有限|先到先得|报满)/.test(t)) caveats.push('名额可能有限，建议尽早行动');
   if (/(以.*为准|另行通知)/.test(t)) caveats.push('细节可能后续更新，以官方通知为准');
 
-  const lede = out.summary || (t.length > 120 ? t.slice(0, 120) + '…' : t);
+  const lede = out.summary || (t.length > 200 ? t.slice(0, 200) + '…' : t);
 
   return {
     lede,
     whoFor: whoFor.slice(0, 4),
-    actions: actions.slice(0, 5),
-    highlights: highlights.slice(0, 6),
-    caveats: caveats.slice(0, 3)
+    actions: actions.slice(0, 6),
+    highlights: highlights.slice(0, 8),
+    caveats: caveats.slice(0, 3),
+    fullBody: String(out.fullBody || m.fullBody || t || '').slice(0, 12000)
   };
 }
 
 function applyDetailFields(out, text, meta) {
-  if (!out.detail) out.detail = buildRuleDetail(out, text);
+  if (!out.detail) out.detail = buildRuleDetail(out, text, meta);
   else {
     const norm = normalizeDetail(out.detail);
-    out.detail = norm || buildRuleDetail(out, text);
+    out.detail = norm || buildRuleDetail(out, text, meta);
   }
   if (!out.coverType || !COVER_TYPES.includes(out.coverType)) {
     out.coverType = inferCoverType(out);

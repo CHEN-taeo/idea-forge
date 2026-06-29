@@ -38,7 +38,10 @@ module.exports = {
   aiPulse: (uid, extra) => req('/api/ai-pulse' + q(uid, extra)),
   aiDigest: (week) => req('/api/ai-pulse/digest' + (week ? '?week=' + encodeURIComponent(week) : '')),
   aiDigestGenerate: () => req('/api/ai-pulse/digest/generate', 'POST', {}),
-  pollAi: () => req('/api/poll-ai', 'POST', {}),
+  poll: () => req('/api/poll', 'POST', {}),
+  sources: () => req('/api/sources'),
+  mpSuggestions: () => req('/api/mp-suggestions'),
+  addSource: (url, room) => req('/api/sources', 'POST', { url, room, type: 'rss' }),
   items: () => req('/api/items'),
   item: (id, uid) => req('/api/items/' + encodeURIComponent(id) + q(uid || '')),
   eventTypes: () => req('/api/event-types'),
@@ -46,5 +49,6 @@ module.exports = {
   ingest: (text, room, extra) => req('/api/ingest', 'POST', Object.assign({ text, room: room || '文件传输助手', sender: '我', source: 'forward' }, extra || {})),
   paste: (text, room, extra) => req('/api/ingest/paste', 'POST', Object.assign({ text, room: room || '文件传输助手', mode: 'lines' }, extra || {})),
   engage: (uid, name, itemId, action, value) => req('/api/engage', 'POST', { uid, name, itemId, action, value }),
+  ask: (itemId, question, interests, uid) => req('/api/ask', 'POST', { itemId, question, interests, uid }),
   insider: (uid, itemId, insiderNote, eventType) => req('/api/items/' + encodeURIComponent(itemId) + '/insider', 'POST', { uid, insiderNote, eventType })
 };

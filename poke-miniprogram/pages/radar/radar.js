@@ -1,6 +1,7 @@
 const store = require('../../utils/store.js');
 const api = require('../../utils/api.js');
 const motion = require('../../utils/motion.js');
+const cardNav = require('../../utils/cardNav.js');
 const FILTERS = ['全部', '讲座', '竞赛', '展览', '峰会', '活动', '机会'];
 
 Page({
@@ -71,5 +72,5 @@ Page({
   },
 
   onAct(e) { return require('../../utils/act.js').handle(this, e); },
-  onCardTap(e) { require('../../utils/cardNav.js').onCardTap(e); }
+  onCardTap(e) { cardNav.onCardTap(e); }
 });

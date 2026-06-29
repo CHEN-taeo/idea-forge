@@ -6,7 +6,7 @@
     <view class="kpi"><view class="kpi-inner"><view class="v">{{items.length}}</view><view class="l">本机录入条数</view></view></view>
   </view>
 
-  <view class="hint">破壳专注<text class="b">信息收集与 AI 整理</text>。真实数据来自官网采集、RSS 与「导入」投喂；下拉各 Tab 可刷新。</view>
+  <view class="hint">流萤专注<text class="b">信息收集与 AI 整理</text>。真实数据来自官网采集、RSS 与「导入」投喂；下拉各 Tab 可刷新。</view>
 
   <view class="sec-title" style="margin-left:0">今天的条目</view>
   <view class="opitem" wx:for="{{items}}" wx:key="id">

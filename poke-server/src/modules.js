@@ -29,10 +29,15 @@ function enrichAll(arr, uid, opts) {
 
 function feed(uid, query) {
   const opts = gapOptsFromQuery(query || {});
-  const arr = store.items().filter(it => ['活动', '通知', '机会'].includes(it.cat)).sort(byTs);
+  const limit = Math.min(Math.max(Number(query && query.limit) || 80, 1), 200);
+  const arr = store.items().filter(it => {
+    if (!notNoise(it)) return false;
+    if (it.source === 'mp' || it.platform === '公众号') return true;
+    return ['活动', '通知', '机会', '资源'].includes(it.cat);
+  }).sort(byTs);
   const enriched = enrichAll(arr, uid, opts);
   enriched.sort((a, b) => (b.gapScore || 0) - (a.gapScore || 0) || byTs(a, b));
-  return enriched.slice(0, 3);
+  return enriched.slice(0, limit);
 }
 
 function buddy(uid, query) {

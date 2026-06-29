@@ -11,7 +11,7 @@
           <view wx:if="{{c.insiderNote}}" class="gapchip gap-insider">内幕</view>
         </view>
         <view class="chiprow">
-          <view class="chip cat {{c.poke ? 'poke' : ''}}">{{c.poke ? '破壳 · ' : ''}}{{c.aiTopic || c.eventType || c.cat}}</view>
+          <view class="chip cat {{c.poke ? 'poke' : ''}}" style="{{c.chipStyle}}">{{c.poke ? c.pokeChip + ' · ' : ''}}{{c.aiTopic || c.eventType || c.cat}}</view>
           <view wx:if="{{c.platform}}" class="chip plat">{{c.platform}}</view>
         </view>
         <view class="h3">{{c.title}}</view>

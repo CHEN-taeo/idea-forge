@@ -39,7 +39,7 @@ function ruleExtract(text, cat) {
   const priceN = pick(/(\d+)\s*(块|元)/, t);
   const place = pick(/((一|二|三|四|五|六|七|八|九|十)\s*(教|号楼)[^，。,\s]{0,6}|(食堂|宿舍|图书馆|操场|体育馆)[^，。,\s]{0,4}|(?<![0-9a-zA-Z])[\u4e00-\u9fa5]{2,6}(报告厅|活动室|实验室|创新中心|会议室|活动中心))/i, t);
   let title = t.replace(/^[【\[][^\]】]+[\]】]\s*/, '').split(/[，。!！?？\n]/)[0].trim();
-  if (title.length > 22) title = title.slice(0, 22) + '…';
+  if (title.length > 48) title = title.slice(0, 48) + '…';
   const tags = [];
   if (cat === '机会') {
     if (/实习|内推|招聘/.test(t)) tags.push('实习');
@@ -53,7 +53,7 @@ function ruleExtract(text, cat) {
   if (cat === '搭子') tags.push('找搭子');
   return {
     title: title || (cat + '消息'),
-    summary: t.length > 80 ? t.slice(0, 80) + '…' : t,
+    summary: t.length > 200 ? t.slice(0, 200) + '…' : t,
     time, deadline, place, price: priceN ? priceN + '元' : '',
     tags
   };
@@ -71,19 +71,22 @@ function enrichMeta(out, text) {
   return out;
 }
 
-const SYS = `你是校园信息助手，服务大学生。把一条微信群原始消息抽成结构化 JSON。
+const SYS = `你是校园信息助手，服务大学生。把一条原始消息（含公众号全文）抽成结构化 JSON。
 分类 cat 只能是其一：活动/通知/搭子/二手/机会/资源/噪音。
-- 噪音=闲聊、问候、无信息量（如"在吗""哈哈""中午吃啥"）。
-- 机会=讲座/竞赛/实习/招聘/内推/奖学金/科研/保研/峰会/展览等对个人成长有用的机会。
-- 搭子=约人/组队/结伴/找队友。
-- 二手=出售/转让/闲置/求购。
-eventType 只能是：讲座/竞赛/展览/峰会/活动/通知/机会/搭子/二手/资源/其他。
-title 要概括"这是什么"（如"数字孪生智能制造讲座"），不要照抄原文开头。
-summary 用一句人话说清"是什么+和我有什么关系"（<=60字）。
-time/deadline/place/price 能抽就抽，抽不到给空字符串。
+- 噪音=闲聊、问候、无信息量。
+- 机会=讲座/竞赛/实习/招聘/内推/奖学金/招生/展览等。
+title 概括「这是什么」。
+summary 用 1-2 句说清要点（<=100字），但 time/deadline/place/报名方式等关键事实必须单独填入对应字段，不要只写在 summary 里。
+time/deadline/place/price 从全文尽量完整抽取（含具体日期、几点、哪个楼/场馆）。
 coverType 只能是：lecture/competition/exhibition/notice/default 之一。
-detail 对象：lede(<=120字详情首段)、whoFor(数组<=4)、actions(要做什么，数组<=5)、highlights(关键信息 pill，数组<=6)、caveats(注意事项，数组<=3)。
-输出严格 JSON：{cat, eventType, confidence(0-1), title(<=22字), summary(<=60字), time, deadline, place, price, tags(数组,<=4), coverType, detail}。`;
+detail 对象：
+- lede：详情首段（<=200字），概括全文要点
+- whoFor：适合谁（数组<=4）
+- actions：用户在本 App 内可完成的步骤（如「设提醒」「收藏备查」「复制报名信息」），不要写「打开外链」「跳转公众号」
+- highlights：关键信息 pill，必须包含抽到的 time/deadline/place 等（数组<=8）
+- caveats：注意事项（数组<=3）
+- fullBody：保留清洗后的正文纯文本（尽量完整，<=6000字）
+输出严格 JSON：{cat, eventType, confidence, title, summary, time, deadline, place, price, tags, coverType, detail:{lede,whoFor,actions,highlights,caveats,fullBody}}。`;
 
 async function process(text, meta = {}) {
   const t = (text || '').trim();
@@ -112,6 +115,8 @@ async function process(text, meta = {}) {
   enrichMeta(out, t);
   applyDetailFields(out, t, meta);
   out.rawText = t;
+  out.fullBody = (meta.fullBody || (out.detail && out.detail.fullBody) || '').slice(0, 12000) || t.slice(0, 12000);
+  if (out.detail && out.detail.fullBody) delete out.detail.fullBody;
   out.source = meta.source || 'group';
   out.room = meta.room || '';
   out.sender = meta.sender || '';
