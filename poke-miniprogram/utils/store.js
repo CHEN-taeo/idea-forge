@@ -15,9 +15,8 @@ function seed() {
     { id: 'a1', cat: '活动', poke: false, title: '机械工程学院 · 智能制造前沿讲座',
       summary: 'AI 摘要：上海交大教授分享数字孪生在产线上的落地，含 Q&A。和你的专业高度相关，适合写进简历的谈资。',
       time: '今天 18:30', place: '三号楼 报告厅', tags: ['专业相关', '可写简历'] },
-    { id: 'a2', cat: '搭子', poke: false, title: '周末青松大学城骑行，缺 2 人',
-      summary: 'AI 摘要：从校门口到佘山往返约 30km，已有 3 人，节奏轻松。想出去走走、又不想一个人的话很合适。',
-      time: '周六 09:00', place: '青松大学城门口集合', tags: ['运动', '认识新朋友'] },
+    { id: 'a2', cat: '机会', poke: false, title: '某科技公司开放日报名',
+      summary: '面向理工科，含参观与简历投递机会。', time: '周六 14:00', place: '线上报名', tags: ['实习', '机会'] },
     { id: 'a3', cat: '通知', poke: false, title: '国家奖学金申请 · 截止倒计时 3 天',
       summary: 'AI 摘要：从一堆群通知里挑出来的硬信息——你符合 GPA 门槛，材料还差一份个人陈述。别错过。',
       time: '截止 周四 17:00', place: '学院教务办 / 线上提交', tags: ['钱', '别错过'] }
@@ -55,6 +54,7 @@ function migrate(r) {
   r.uid = r.uid || genUid();
   r.cache = r.cache || {};
   r.interests = r.interests || []; // 关注方向：竞赛/创业/展览/讲座/专业相关/机会嗅探
+  r.aiInterests = r.aiInterests || []; // AI 关注：Agent/Cursor/IDE/开源项目/播客/模型
   return r;
 }
 
@@ -62,21 +62,113 @@ function interestQuery(S) {
   return (S.interests && S.interests.length) ? { interests: S.interests.join(',') } : {};
 }
 
+function aiInterestQuery(S) {
+  return (S.aiInterests && S.aiInterests.length) ? { aiInterests: S.aiInterests.join(',') } : {};
+}
+
+function aiPulseSamples() {
+  return [
+    { id: 'ai_s1', cat: 'AI脉动', lane: 'ai', aiTopic: '妙招', platform: 'rss',
+      title: 'Cursor Rules：用 .mdc 固化你的代码风格',
+      summary: '社区热议：把团队规范写进 rules，每次对话自动遵守，减少反复纠正。',
+      tags: ['妙招', 'Cursor'], pulseScore: 72,
+      pulseReasons: [{ label: '⚡ 24h 新发' }, { label: '✨ 匹配关注：Cursor/IDE' }],
+      url: 'https://cursor.com', time: '', place: '', deadline: '' },
+    { id: 'ai_s2', cat: 'AI脉动', lane: 'ai', aiTopic: '开源', platform: 'github',
+      title: 'MCP 服务器合集：一键接工具到 Claude',
+      summary: 'GitHub 本周 Star 上涨：把文件系统、数据库、浏览器接到 Agent 的标准协议实践。',
+      tags: ['开源', 'MCP', 'Agent'], pulseScore: 68, stars: 1200,
+      pulseReasons: [{ label: '⭐ 热门开源' }, { label: '🌐 GITHUB' }],
+      url: 'https://github.com', time: '', place: '', deadline: '' },
+    { id: 'ai_s3', cat: 'AI脉动', lane: 'ai', aiTopic: '大家在用', platform: 'hn',
+      title: 'Show HN：用 AI Agent 自动写周报',
+      summary: 'HN 热议：从 Git commit + 日历生成周报草稿，人在回路只改 20%。',
+      tags: ['大家在用', '工作流'], pulseScore: 55,
+      pulseReasons: [{ label: '📅 本周新发' }],
+      url: 'https://news.ycombinator.com', time: '', place: '', deadline: '' }
+  ];
+}
+
+function aiDigestSample() {
+  return {
+    title: '本周 AI 脉动（离线示例）',
+    summary: '• Cursor Rules 固化代码风格（妙招）\n• MCP 服务器合集热度上升（开源）\n• AI Agent 自动写周报引热议（大家在用）',
+    highlights: []
+  };
+}
+
+const COVER_MAP = {
+  lecture: '/assets/cover-lecture.svg',
+  competition: '/assets/cover-competition.svg',
+  exhibition: '/assets/cover-exhibition.svg',
+  notice: '/assets/cover-notice.svg',
+  ai: '/assets/cover-ai.svg',
+  default: '/assets/cover-default.svg'
+};
+
+function coverSrc(it) {
+  if (it && it.imageUrl) return it.imageUrl;
+  const type = (it && it.coverType) || 'default';
+  return COVER_MAP[type] || COVER_MAP.default;
+}
+
+function coverIsRemote(src) {
+  return src && /^https?:\/\//i.test(src);
+}
+
 // 把「后端富化过的 item」映射成卡片视图
 function serverCardVM(it) {
-  const m = it.mine || { go: false, buddy: false, attended: false };
-  const gapReasons = (it.gapReasons || []).map(r => (typeof r === 'string' ? r : r.label)).filter(Boolean);
+  const gapReasons = (it.gapReasons || it.pulseReasons || []).map(r => (typeof r === 'string' ? r : r.label)).filter(Boolean);
+  const thumb = coverSrc(it);
   return {
-    id: it.id, cat: it.cat, eventType: it.eventType || '', poke: !!it.poke,
+    id: it.id, cat: it.cat, eventType: it.eventType || it.aiTopic || '', poke: !!it.poke,
     title: it.title, summary: it.summary,
     time: it.time, place: it.place, deadline: it.deadline || '', price: it.price || '',
     tags: it.tags || [], pokeReason: it.pokeReason || '',
-    insiderNote: it.insiderNote || '', gapScore: it.gapScore || 0,
+    insiderNote: it.insiderNote || '', gapScore: it.gapScore || it.pulseScore || 0,
     gapReasons: gapReasons.slice(0, 2), deadlineTier: it.deadlineTier || '',
-    goN: it.goN || 0, bdN: it.bdN || 0,
-    go: m.go, buddy: m.buddy, attended: m.attended,
-    names: it.buddyNames || []
+    platform: it.platform || '', url: it.url || '', aiTopic: it.aiTopic || '',
+    room: it.room || '', lane: it.lane || '',
+    coverType: it.coverType || 'default',
+    imageUrl: it.imageUrl || '',
+    thumbSrc: thumb,
+    thumbRemote: coverIsRemote(thumb),
+    daysToDeadline: it.daysToDeadline
   };
+}
+
+function fmtTs(ts) {
+  const d = new Date(ts);
+  const pad = (n) => (n < 10 ? '0' : '') + n;
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+function detailVM(it) {
+  if (!it) return null;
+  const gapReasons = (it.gapReasons || it.pulseReasons || []).map(r => (typeof r === 'string' ? r : r.label)).filter(Boolean);
+  const base = serverCardVM(it);
+  const detail = it.detail || {};
+  const lede = detail.lede || it.summary || '';
+  const highlights = (detail.highlights && detail.highlights.length)
+    ? detail.highlights
+    : [it.time, it.place, it.deadline, it.price].filter(Boolean);
+  return Object.assign({}, base, {
+    rawText: it.rawText || '',
+    gapReasonsFull: gapReasons,
+    stars: it.stars || 0,
+    engine: it.engine || '',
+    createdAt: it.ts ? fmtTs(it.ts) : '',
+    confidence: typeof it.confidence === 'number' ? Math.round(it.confidence * 100) : 0,
+    detailLede: lede,
+    whoFor: detail.whoFor || [],
+    actions: detail.actions || [],
+    highlights: highlights,
+    caveats: detail.caveats || [],
+    coverSrc: coverSrc(it),
+    coverRemote: coverIsRemote(coverSrc(it)),
+    daysToDeadline: it.daysToDeadline,
+    deadlineUrgent: typeof it.daysToDeadline === 'number' && it.daysToDeadline >= 0 && it.daysToDeadline <= 3
+  });
 }
 
 // 缓存后端 items，让其它页面能按 id 还原
@@ -132,16 +224,16 @@ function cogQ(id) {
 }
 
 function cardVM(S, it) {
-  const e = eng(S, it.id);
-  const goN = (S.others[it.id] || 0) + (e.go ? 1 : 0);
-  const bdN = (S.othersBuddy[it.id] || 0) + (e.buddy ? 1 : 0);
-  const names = (S.buddyNames[it.id] || []).slice();
-  if (e.buddy) names.push(S.meName + '（你）');
+  const thumb = coverSrc(it);
   return {
     id: it.id, cat: it.cat, poke: !!it.poke, title: it.title, summary: it.summary,
     time: it.time, place: it.place, deadline: it.deadline || '', price: it.price || '',
     tags: it.tags || [], pokeReason: it.pokeReason || '',
-    goN: goN, bdN: bdN, go: e.go, buddy: e.buddy, attended: e.attended, names: names
+    gapReasons: [], insiderNote: '',
+    url: it.url || '', room: it.room || '',
+    coverType: it.coverType || 'default',
+    thumbSrc: thumb,
+    thumbRemote: coverIsRemote(thumb)
   };
 }
 
@@ -153,5 +245,6 @@ function fmtDate() {
 
 module.exports = {
   todayStr, clone, load, save, reset, eng, todayItems, allItemsById,
-  cogQ, cardVM, serverCardVM, fmtDate, cacheItems, interestQuery
+  cogQ, cardVM, serverCardVM, detailVM, coverSrc, fmtDate, cacheItems, interestQuery, aiInterestQuery,
+  aiPulseSamples, aiDigestSample
 };

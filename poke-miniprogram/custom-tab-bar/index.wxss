@@ -1,0 +1,42 @@
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 -4rpx 24rpx rgba(44, 38, 32, 0.05);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 99;
+}
+.tabscroll { width: 100%; white-space: nowrap; }
+.tabinner { display: flex; flex-direction: row; min-width: 100%; }
+.tab {
+  flex: 1;
+  min-width: 108rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 4rpx 14rpx;
+  color: #A39E97;
+  position: relative;
+}
+.tab.on { color: #3D6B5E; }
+.tab.on::after {
+  content: '';
+  position: absolute;
+  bottom: 8rpx;
+  width: 32rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: #3D6B5E;
+}
+.icon {
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 6rpx;
+}
+.txt { font-size: 20rpx; line-height: 1.2; }

@@ -1,48 +1,53 @@
 // 生成 9:16 分享图并保存到相册
 function drawShare(card, ctx, w, h) {
-  const bg = '#0f1117';
-  const cardBg = '#1a1d27';
-  const accent = '#7c5cff';
-  const mint = '#37e0c6';
-  const warn = '#ffb454';
+  const bg = '#F5F0E8';
+  const cardBg = '#FFFFFF';
+  const accent = '#3D6B5E';
+  const ink = '#2C2C2C';
+  const inkMuted = '#6B6560';
+  const cinnabar = '#C45C4A';
 
   ctx.setFillStyle(bg);
   ctx.fillRect(0, 0, w, h);
 
+  ctx.setStrokeStyle('rgba(44, 38, 32, 0.08)');
+  ctx.setLineWidth(1);
   ctx.setFillStyle(cardBg);
   roundRect(ctx, 40, 120, w - 80, h - 280, 24);
   ctx.fill();
+  roundRect(ctx, 40, 120, w - 80, h - 280, 24);
+  ctx.stroke();
 
   ctx.setFillStyle(accent);
   ctx.setFontSize(22);
-  ctx.fillText('破壳 · 校园信息差', 60, 80);
+  ctx.fillText('破壳', 60, 80);
 
-  ctx.setFillStyle(mint);
+  ctx.setFillStyle(accent);
   ctx.setFontSize(20);
   const typeLabel = card.eventType || card.cat || '活动';
   ctx.fillText(typeLabel, 60, 180);
 
-  ctx.setFillStyle('#eef1f7');
+  ctx.setFillStyle(ink);
   ctx.setFontSize(28);
   wrapText(ctx, card.title || '', 60, 230, w - 120, 36, 3);
 
-  ctx.setFillStyle('#9aa3b2');
+  ctx.setFillStyle(inkMuted);
   ctx.setFontSize(20);
   wrapText(ctx, card.summary || '', 60, 340, w - 120, 30, 4);
 
   if (card.deadline) {
-    ctx.setFillStyle(warn);
+    ctx.setFillStyle(cinnabar);
     ctx.setFontSize(22);
-    ctx.fillText('⏰ ' + card.deadline, 60, h - 220);
+    ctx.fillText('截止 ' + card.deadline, 60, h - 220);
   }
   if (card.place) {
-    ctx.setFillStyle('#9aa3b2');
-    ctx.fillText('📍 ' + card.place, 60, h - 180);
+    ctx.setFillStyle(inkMuted);
+    ctx.fillText(card.place, 60, h - 180);
   }
 
-  ctx.setFillStyle('#6b7280');
+  ctx.setFillStyle('#A39E97');
   ctx.setFontSize(18);
-  ctx.fillText('#破壳 · 把群消息变成今天值得做的事', 60, h - 100);
+  ctx.fillText('破壳 · 把群消息变成今天值得做的事', 60, h - 100);
 }
 
 function roundRect(ctx, x, y, w, h, r) {

@@ -20,6 +20,7 @@ function db() {
   if (!cache.raw) cache.raw = [];
   if (!cache.items) cache.items = [];
   if (!cache.engage) cache.engage = {}; // { itemId: { go:{uid:true}, buddy:{uid:name}, attended:{uid:true} } }
+  if (!cache.aiDigests) cache.aiDigests = [];
   if (typeof cache.seq !== 'number') cache.seq = 0;
   return cache;
 }
@@ -60,11 +61,16 @@ function addRaw(msg) {
   return rec;
 }
 
-function recentDuplicate(text) {
+function recentDuplicate(text, url) {
   const d = db();
   const n = normalize(text);
-  if (!n) return true;
-  return d.items.some(it => normalize(it.rawText) === n);
+  if (!n && !url) return true;
+  if (url) {
+    const u = (url || '').trim().toLowerCase();
+    if (u && d.items.some(it => (it.url || '').trim().toLowerCase() === u)) return true;
+  }
+  if (n && d.items.some(it => normalize(it.rawText) === n)) return true;
+  return false;
 }
 
 function addItem(it) {
@@ -92,8 +98,23 @@ function updateItem(id, patch) {
 }
 
 function reset() {
-  cache = { raw: [], items: [], engage: {}, seq: 0 };
+  cache = { raw: [], items: [], engage: {}, aiDigests: [], seq: 0 };
   persist();
+}
+
+function aiDigests() { return db().aiDigests.slice(); }
+
+function saveAiDigest(digest) {
+  const d = db();
+  const i = d.aiDigests.findIndex(x => x.week === digest.week);
+  if (i >= 0) d.aiDigests[i] = digest;
+  else d.aiDigests.unshift(digest);
+  persist();
+  return digest;
+}
+
+function getAiDigest(week) {
+  return db().aiDigests.find(x => x.week === week) || null;
 }
 
 /* ---------- engagement（多人“想去/找搭子/去过”，按 uid 计数） ---------- */
@@ -128,14 +149,16 @@ function mineState(itemId, uid) {
   const b = d.engage[itemId] || { go: {}, buddy: {}, attended: {} };
   return { go: !!b.go[uid], buddy: !!b.buddy[uid], attended: !!b.attended[uid] };
 }
-function enrich(it, uid, gapOpts) {
-  const gap = require('./gap');
+function enrich(it, uid, enrichOpts) {
   const c = counts(it.id);
   const base = Object.assign({}, it, {
     goN: c.goN, bdN: c.bdN, atN: c.atN, buddyNames: c.buddyNames,
     mine: uid ? mineState(it.id, uid) : { go: false, buddy: false, attended: false }
   });
-  return gap.withGap(base, uid, gapOpts);
+  if (it.lane === 'ai' || it.cat === 'AI脉动') {
+    return require('./pulse').withPulse(base, uid, enrichOpts);
+  }
+  return require('./gap').withGap(base, uid, enrichOpts);
 }
 function myItemIds(uid) {
   const d = db();
@@ -147,6 +170,6 @@ function myItemIds(uid) {
 
 module.exports = {
   db, persist, addRaw, addItem, items, raw, reset, recentDuplicate, normalize,
-  getItem, updateItem,
+  getItem, updateItem, aiDigests, saveAiDigest, getAiDigest,
   setEngage, counts, mineState, enrich, myItemIds
 };

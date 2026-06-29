@@ -2,31 +2,31 @@
   "pages": [
     "pages/today/today",
     "pages/radar/radar",
-    "pages/buddy/buddy",
-    "pages/reflect/reflect",
+    "pages/ai-pulse/ai-pulse",
     "pages/mine/mine",
     "pages/operator/operator",
     "pages/forward/forward",
+    "pages/detail/detail",
     "pages/insider/insider",
     "pages/share/share"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#0f1117",
+    "navigationBarBackgroundColor": "#F5F0E8",
     "navigationBarTitleText": "破壳",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0f1117",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F0E8",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#6b7280",
-    "selectedColor": "#37e0c6",
-    "backgroundColor": "#0f1117",
+    "custom": true,
+    "color": "#A39E97",
+    "selectedColor": "#3D6B5E",
+    "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [
       { "pagePath": "pages/today/today", "text": "今天" },
       { "pagePath": "pages/radar/radar", "text": "机会" },
-      { "pagePath": "pages/buddy/buddy", "text": "搭子" },
-      { "pagePath": "pages/reflect/reflect", "text": "复盘" },
+      { "pagePath": "pages/ai-pulse/ai-pulse", "text": "AI脉动" },
       { "pagePath": "pages/mine/mine", "text": "我的" }
     ]
   },

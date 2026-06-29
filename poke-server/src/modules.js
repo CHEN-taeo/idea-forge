@@ -1,6 +1,7 @@
 // 模块视图：对已结构化 items 做「过滤 + 排序 + engagement + 信息差」富化。
 const store = require('./store');
 const { EVENT_TYPES } = require('./gap');
+const { AI_TOPICS } = require('./pulse');
 
 const notNoise = it => it.cat !== '噪音';
 const byTs = (a, b) => b.ts - a.ts;
@@ -11,8 +12,15 @@ function parseInterests(q) {
   return String(q).split(/[,，]/).map(s => s.trim()).filter(Boolean);
 }
 
+function pulseOptsFromQuery(query) {
+  return {
+    interests: parseInterests(query.interests),
+    aiInterests: parseInterests(query.aiInterests)
+  };
+}
+
 function gapOptsFromQuery(query) {
-  return { interests: parseInterests(query.interests) };
+  return pulseOptsFromQuery(query);
 }
 
 function enrichAll(arr, uid, opts) {
@@ -119,9 +127,11 @@ function stats() {
   const noNoise = items.filter(notNoise).length;
   const byCat = {};
   const byEventType = {};
+  const byAiTopic = {};
   items.forEach(it => {
     byCat[it.cat] = (byCat[it.cat] || 0) + 1;
     if (it.eventType) byEventType[it.eventType] = (byEventType[it.eventType] || 0) + 1;
+    if (it.aiTopic) byAiTopic[it.aiTopic] = (byAiTopic[it.aiTopic] || 0) + 1;
   });
   return {
     raw: store.raw().length,
@@ -130,8 +140,24 @@ function stats() {
     noise: items.length - noNoise,
     signalRate: items.length ? Math.round(noNoise / items.length * 100) : 0,
     byCat,
-    byEventType
+    byEventType,
+    byAiTopic
   };
 }
 
-module.exports = { feed, buddy, radar, poke, mine, gap, calendar, stats, EVENT_TYPES };
+function aiPulse(uid, query) {
+  const q = query || {};
+  const opts = pulseOptsFromQuery(q);
+  let arr = store.items().filter(it => it.lane === 'ai' || it.cat === 'AI脉动');
+  if (q.aiTopic && q.aiTopic !== '全部') {
+    arr = arr.filter(it => it.aiTopic === q.aiTopic);
+  }
+  if (q.platform && q.platform !== '全部') {
+    arr = arr.filter(it => it.platform === q.platform);
+  }
+  const enriched = enrichAll(arr, uid, opts);
+  enriched.sort((a, b) => (b.pulseScore || b.gapScore || 0) - (a.pulseScore || a.gapScore || 0) || byTs(a, b));
+  return enriched;
+}
+
+module.exports = { feed, buddy, radar, poke, mine, gap, calendar, stats, aiPulse, EVENT_TYPES, AI_TOPICS };

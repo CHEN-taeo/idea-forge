@@ -35,11 +35,16 @@ module.exports = {
   gap: (uid, extra) => req('/api/gap' + q(uid, extra)),
   calendar: (uid, extra) => req('/api/calendar' + q(uid, extra)),
   me: (uid, extra) => req('/api/me' + q(uid, extra)),
+  aiPulse: (uid, extra) => req('/api/ai-pulse' + q(uid, extra)),
+  aiDigest: (week) => req('/api/ai-pulse/digest' + (week ? '?week=' + encodeURIComponent(week) : '')),
+  aiDigestGenerate: () => req('/api/ai-pulse/digest/generate', 'POST', {}),
+  pollAi: () => req('/api/poll-ai', 'POST', {}),
   items: () => req('/api/items'),
+  item: (id, uid) => req('/api/items/' + encodeURIComponent(id) + q(uid || '')),
   eventTypes: () => req('/api/event-types'),
   health: () => req('/api/health'),
-  ingest: (text, room) => req('/api/ingest', 'POST', { text, room: room || '文件传输助手', sender: '我', source: 'forward' }),
-  paste: (text, room) => req('/api/ingest/paste', 'POST', { text, room: room || '文件传输助手', mode: 'lines' }),
+  ingest: (text, room, extra) => req('/api/ingest', 'POST', Object.assign({ text, room: room || '文件传输助手', sender: '我', source: 'forward' }, extra || {})),
+  paste: (text, room, extra) => req('/api/ingest/paste', 'POST', Object.assign({ text, room: room || '文件传输助手', mode: 'lines' }, extra || {})),
   engage: (uid, name, itemId, action, value) => req('/api/engage', 'POST', { uid, name, itemId, action, value }),
   insider: (uid, itemId, insiderNote, eventType) => req('/api/items/' + encodeURIComponent(itemId) + '/insider', 'POST', { uid, insiderNote, eventType })
 };

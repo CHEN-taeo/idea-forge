@@ -1,41 +1,41 @@
+<import src="../../templates/hero.wxml" />
 <import src="../../templates/card.wxml" />
 
-<view class="hd">
-  <view class="brand">
-    <view class="logo">🐣</view>
-    <view>
-      <view class="title">破壳</view>
-      <view class="tag">把刷不完的群消息，变成今天值得做的 3 件事</view>
-    </view>
-  </view>
-  <view class="datebar">
-    <view class="d"><text class="b">{{dateLabel}}</text>　{{online ? '实时 · 真实 AI 数据' : '离线 · 示例数据'}}</view>
-    <view class="gear" bindtap="goForward">导入</view>
-    <view class="gear" bindtap="goOperator" style="margin-left:12rpx">运营</view>
-  </view>
-</view>
+<template is="hero" data="{{heroData}}" />
 
-<view class="wrap">
+<view class="wrap tabpage">
   <block wx:if="{{normal.length || poke.length}}">
-    <view class="lead">少即是多 —— 破壳的目标不是给你<text class="em">更多</text>，而是更少、更准。今天就这几条，看完就去做点什么。</view>
+    <view class="lead">今日精选，看完即知。</view>
 
-    <view class="sec-title"><text class="n">{{normal.length}}</text> 今日精选 · 值得做的事</view>
-    <block wx:for="{{normal}}" wx:key="id">
-      <template is="card" data="{{c: item}}" />
-    </block>
+    <view class="card-group">
+      <view class="sec-title"><text class="n">{{normal.length}}</text>值得看</view>
+      <view class="card-inset">
+        <block wx:for="{{normal}}" wx:key="id">
+          <template is="card" data="{{c: item}}" />
+        </block>
+      </view>
+    </view>
 
     <block wx:if="{{poke.length}}">
-      <view class="sec-title">🌱 破壳一下 · 圈外的</view>
-      <block wx:for="{{poke}}" wx:key="id">
-        <template is="card" data="{{c: item}}" />
-      </block>
+      <view class="card-group">
+        <view class="sec-title"><text class="n">{{poke.length}}</text>破壳 · 圈外</view>
+        <view class="card-inset">
+          <block wx:for="{{poke}}" wx:key="id">
+            <template is="card" data="{{c: item}}" />
+          </block>
+        </view>
+      </view>
     </block>
   </block>
 
   <view wx:else class="empty">
-    <view class="big">🐣</view>今天还没有内容
-    <view class="small">粘贴一条班委群消息到「导入」，30 秒后出现信息差</view>
+    <image class="empty-img" src="/assets/empty-import.svg" mode="aspectFit" />
+    <view class="empty-title">还没有动静</view>
+    <view class="small">去导入一条群消息，约 30 秒后出现</view>
+    <view class="ghost" style="margin-top:32rpx" bindtap="goForward">去导入</view>
   </view>
 
-  <view wx:if="{{online}}" class="ghost linkbar" bindtap="goRadar">查看本周全部活动 →</view>
+  <view wx:if="{{online}}" class="linkbar">
+    <view class="ghost" bindtap="goRadar">查看全部机会</view>
+  </view>
 </view>

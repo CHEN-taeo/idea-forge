@@ -2,7 +2,7 @@
 // 优先用 LLM；没配 key 则用规则引擎（离线可跑、可解释）。
 const llm = require('./llm');
 const { extractDeadlineDate, daysUntil, inferEventType } = require('../lib/deadline');
-
+const { applyDetailFields, parseLLMDetail } = require('../lib/detail');
 const CATS = ['活动', '通知', '搭子', '二手', '机会', '资源', '噪音'];
 
 const RULES = [
@@ -79,9 +79,11 @@ const SYS = `你是校园信息助手，服务大学生。把一条微信群原�
 - 二手=出售/转让/闲置/求购。
 eventType 只能是：讲座/竞赛/展览/峰会/活动/通知/机会/搭子/二手/资源/其他。
 title 要概括"这是什么"（如"数字孪生智能制造讲座"），不要照抄原文开头。
-summary 用一句人话说清"是什么+和我有什么关系"。
+summary 用一句人话说清"是什么+和我有什么关系"（<=60字）。
 time/deadline/place/price 能抽就抽，抽不到给空字符串。
-输出严格 JSON：{cat, eventType, confidence(0-1), title(<=22字), summary(<=60字), time, deadline, place, price, tags(数组,<=4)}。`;
+coverType 只能是：lecture/competition/exhibition/notice/default 之一。
+detail 对象：lede(<=120字详情首段)、whoFor(数组<=4)、actions(要做什么，数组<=5)、highlights(关键信息 pill，数组<=6)、caveats(注意事项，数组<=3)。
+输出严格 JSON：{cat, eventType, confidence(0-1), title(<=22字), summary(<=60字), time, deadline, place, price, tags(数组,<=4), coverType, detail}。`;
 
 async function process(text, meta = {}) {
   const t = (text || '').trim();
@@ -96,6 +98,8 @@ async function process(text, meta = {}) {
         title: (j.title || '').slice(0, 30), summary: j.summary || t,
         time: j.time || '', deadline: j.deadline || '', place: j.place || '',
         price: j.price || '', tags: Array.isArray(j.tags) ? j.tags.slice(0, 4) : [],
+        coverType: j.coverType || '',
+        detail: parseLLMDetail(j),
         engine: 'llm'
       };
     }
@@ -106,11 +110,12 @@ async function process(text, meta = {}) {
     out = Object.assign({ cat: c.cat, confidence: c.confidence, engine: 'rule' }, e);
   }
   enrichMeta(out, t);
+  applyDetailFields(out, t, meta);
   out.rawText = t;
   out.source = meta.source || 'group';
   out.room = meta.room || '';
   out.sender = meta.sender || '';
-  out.url = meta.url || '';
+  out.url = meta.url || out.url || '';
   return out;
 }
 

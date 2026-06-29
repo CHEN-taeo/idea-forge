@@ -1,0 +1,13 @@
+{
+  "weweRssBase": "http://127.0.0.1:4000",
+  "note": "在 WeWe-RSS 管理台添加公众号后，复制单源 RSS 链接，执行：npm run wewe -- add <rss-url> <来源名>",
+  "suggestedAccounts": [
+    { "room": "东华大学", "search": "东华大学" },
+    { "room": "东华团委", "search": "东华大学团委" },
+    { "room": "东华图书馆", "search": "东华大学图书馆" },
+    { "room": "东华就业", "search": "东华大学学生就业服务网" },
+    { "room": "东华研究生", "search": "东华大学研究生" },
+    { "room": "DHU创新创业", "search": "东华大学创新创业" }
+  ],
+  "exampleFeedUrl": "http://127.0.0.1:4000/feeds/MP_WXS_xxxxxxxx.rss"
+}
