@@ -2,7 +2,7 @@
 const brand = require('./brand.js');
 
 function drawShare(card, ctx, w, h) {
-  const bg = '#F7F5F2';
+  const bg = '#F2F2F7';
   const cardBg = 'rgba(255,255,255,0.92)';
   const accent = '#6B8CAE';
   const ink = '#2A2E37';

@@ -1,5 +1,4 @@
-<page-meta root-class="{{themeDark ? 'theme-dark' : ''}}" background-color="{{themeDark ? '#15171C' : '#F7F5F2'}}" />
-<view class="page-texture"></view>
+<page-meta root-class="{{themeDark ? 'theme-dark' : ''}}" background-color="{{themeDark ? '#000000' : '#F2F2F7'}}" />
 
 <view class="add-page">
   <view class="welcome-bar glass-bar" style="padding-top:{{navPadTop}}px;padding-right:{{navPadRight}}px;display:flex;justify-content:space-between;align-items:center">

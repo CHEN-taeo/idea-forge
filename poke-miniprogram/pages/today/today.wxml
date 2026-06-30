@@ -1,11 +1,13 @@
-<page-meta root-class="{{themeDark ? 'theme-dark' : ''}}" background-color="{{themeDark ? '#15171C' : '#F7F5F2'}}" />
-<view class="page-texture"></view>
+<page-meta root-class="{{themeDark ? 'theme-dark' : ''}}" background-color="{{themeDark ? '#000000' : '#F2F2F7'}}" />
 
 <import src="../../templates/masonry-card.wxml" />
 
-<view class="welcome-bar glass-bar" style="padding-top:{{navPadTop}}px;padding-right:{{navPadRight}}px">
-  <view class="welcome-brand">{{brandName}} · {{brandSlogan}}</view>
-  <view class="welcome-quote">{{welcomeQuote}}</view>
+<view class="welcome-bar" style="padding-top:{{navPadTop}}px;padding-right:{{navPadRight}}px">
+  <view class="welcome-brand-row">
+    <view class="brand-dot"></view>
+    <view class="welcome-quote">{{brandName}}</view>
+  </view>
+  <view class="welcome-slogan">{{brandSlogan}}</view>
   <view class="welcome-sub">{{heroMeta}}</view>
 </view>
 
@@ -26,7 +28,6 @@
     <view class="ink-blob"></view>
     <view class="ink-blob"></view>
     <view class="ink-blob"></view>
-    <view class="ink-blob"></view>
   </view>
 
   <block wx:elif="{{hasItems}}">
@@ -35,15 +36,13 @@
       <view
         wx:for="{{brief}}"
         wx:key="slot"
-        class="brief-card glass {{item.enterClass}}"
+        class="brief-card {{item.enterClass}}"
+        style="--card-accent: {{item.card.catColor}};"
         bindtap="onCardTap"
         data-id="{{item.card.id}}"
         hover-class="glass-press"
       >
-        <view class="brief-glow"></view>
-        <view class="brief-slot">{{item.slotLabel}}</view>
-        <view class="brief-hint">{{item.slotHint}}</view>
-        <view wx:if="{{item.reason}}" class="type-caption" style="color:var(--accent);margin-bottom:8rpx">{{item.reason}}</view>
+        <view class="brief-slot brief-slot-{{item.slot}}">{{item.slotLabel}}</view>
         <view class="brief-title">{{item.card.title}}</view>
         <view wx:if="{{item.card.time || item.card.place || item.card.deadline}}" class="brief-meta">
           <text wx:if="{{item.card.time}}">{{item.card.time}}</text>
@@ -54,7 +53,7 @@
       </view>
     </view>
 
-    <view class="sec-title">灵感墙</view>
+    <view class="sec-title">更多</view>
     <view class="masonry">
       <view class="masonry-col">
         <block wx:for="{{leftCol}}" wx:key="id">
@@ -67,12 +66,9 @@
         </block>
       </view>
     </view>
-    <view class="brush-rule"></view>
-    <view wx:if="{{online}}" class="ghost" bindtap="goRadar">浏览机会雷达</view>
   </block>
 
   <view wx:else class="empty">
-    <view class="firefly-empty-glow"></view>
     <image class="empty-img" src="/assets/empty-import.svg" mode="aspectFit" />
     <view class="empty-title">第一点光，还在等你拾起</view>
     <view class="small">收录一条消息，光点就会亮起来</view>

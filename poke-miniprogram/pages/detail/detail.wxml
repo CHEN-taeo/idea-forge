@@ -13,44 +13,44 @@
 </view>
 
 <view wx:elif="{{item}}" class="detail-page {{ready ? 'detail-ready' : ''}}">
-  <view class="detail-nav detail-nav-overlay" style="padding-top:{{statusBarHeight}}px">
-    <view class="detail-nav-back" bindtap="onBack">‹ 返回</view>
-  </view>
-  <view class="detail-hero">
-    <image
-      class="detail-cover {{coverLoaded ? 'cover-loaded' : ''}}"
-      src="{{item.coverSrc}}"
-      mode="aspectFill"
-      bindload="onCoverLoad"
-    />
-    <view class="detail-hero-mask"></view>
-    <view wx:if="{{item.deadline}}" class="detail-deadline-badge {{item.deadlineUrgent ? 'urgent' : ''}}">
-      {{item.deadline}}
+  <block wx:if="{{item.coverRemote}}">
+    <view class="detail-nav detail-nav-overlay" style="padding-top:{{statusBarHeight}}px">
+      <view class="detail-nav-back" bindtap="onBack">‹ 返回</view>
     </view>
+    <view class="detail-hero">
+      <image
+        class="detail-cover {{coverLoaded ? 'cover-loaded' : ''}}"
+        src="{{item.coverSrc}}"
+        mode="aspectFill"
+        bindload="onCoverLoad"
+      />
+      <view class="detail-hero-mask"></view>
+      <view wx:if="{{item.deadline}}" class="detail-deadline-badge {{item.deadlineUrgent ? 'urgent' : ''}}">
+        {{item.deadline}}
+      </view>
+    </view>
+  </block>
+  <view wx:else class="detail-nav" style="padding-top:{{statusBarHeight}}px">
+    <view class="detail-nav-back" bindtap="onBack">‹ 返回</view>
   </view>
 
   <view class="wrap detail-body detail-pad-bottom">
     <view class="detail-block detail-enter d0">
       <view class="chiprow">
-        <view class="chip cat {{item.poke ? 'poke' : ''}}" style="{{item.chipStyle}}">{{item.poke ? item.pokeChip + ' · ' : ''}}{{item.aiTopic || item.eventType || item.cat}}</view>
-        <view wx:if="{{item.platform}}" class="chip plat">{{item.platform}}</view>
-        <view wx:if="{{item.room}}" class="chip">{{item.room}}</view>
+        <view class="chip cat" style="{{item.chipStyle}}">{{item.poke ? item.pokeChip + ' · ' : ''}}{{item.aiTopic || item.eventType || item.cat}}</view>
+        <view wx:if="{{item.room}}" class="chip muted">{{item.room}}</view>
       </view>
       <view class="type-hero detail-title">{{item.title}}</view>
 
-      <view wx:if="{{item.keyFacts.length}}" class="key-facts glass detail-enter d0">
+      <view wx:if="{{item.keyFacts.length}}" class="key-facts detail-enter d0">
         <view wx:for="{{item.keyFacts}}" wx:for-item="fact" wx:key="k" class="key-fact-row">
           <text class="key-fact-k">{{fact.k}}</text>
           <text class="key-fact-v">{{fact.v}}</text>
         </view>
       </view>
 
-      <view wx:if="{{item.sourceMp}}" class="type-caption mp-hint">公众号全文已收录 · 无需跳转微信阅读</view>
+      <view wx:if="{{item.sourceMp}}" class="type-caption mp-hint">公众号全文已收录</view>
 
-      <view wx:if="{{item.gapReasonsFull.length}}" class="detail-reasons">
-        <image class="seal-icon" src="/assets/seal-dot.svg" mode="aspectFit" />
-        <view wx:for="{{item.gapReasonsFull}}" wx:for-item="reason" wx:key="*this" class="gapchip gap-1">{{reason}}</view>
-      </view>
       <view wx:if="{{item.tagList.length}}" class="detail-pills" style="margin-top:12rpx">
         <view wx:for="{{item.tagList}}" wx:for-item="tag" wx:key="*this" class="detail-pill">{{tag}}</view>
       </view>
